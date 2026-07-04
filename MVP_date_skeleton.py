@@ -6,7 +6,7 @@ from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
 
-class GenereEnum(str, Enum):
+class GenderEnum(str, Enum):
     MALE = "Masculí"
     FEMALE = "Femení"
     OTHER = "Altres"
@@ -34,7 +34,7 @@ class Player(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String,  nullable=False)
-    gender = Column(SQLEnum(GenereEnum), nullable=False)
+    gender = Column(SQLEnum(GenderEnum), nullable=False)
     main_position = Column(SQLEnum(PositionEnum), nullable=False)
     secondary_position = Column(SQLEnum(PositionEnum), nullable=True)
     is_admin = Column(Boolean, default=False)
