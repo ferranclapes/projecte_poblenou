@@ -23,13 +23,18 @@ class PositionEnum(str, Enum):
     OUTSIDE = "Punta"
     LIBERO = "Líbero"
 
+class AssistanceStatusEnum(str, Enum):
+    CONFIRMED_YES = "Si que ve"
+    CONFIRMED_NO = "No ve"
+    NOT_CONFIRMED = "No confirmat"
+
 class CreatePlayer(BaseModel):
     name: str
     gender: GenderEnum
     main_position: PositionEnum
     secondary_position: Optional[PositionEnum] = None
 
-class PlayerResponse(BaseModel):
+class PlayerResponse(CreatePlayer):
     id: int
     is_admin: bool
 
@@ -42,12 +47,12 @@ class CreateEvent(BaseModel):
     date_time: datetime
     location: Optional[str] = None
 
-class EventResponse(BaseModel):
+class EventResponse(CreateEvent):
     id: int
 
-class UpadeAssistance(BaseModel):
+class UpdateAssistance(BaseModel):
     player_id: int
-    state: str
+    status: str
     comment: Optional[str] = None
 
 # --------------------------------------------------------------------------------
@@ -56,7 +61,7 @@ class UpadeAssistance(BaseModel):
 
 db_players = []
 db_events = []
-db_assistances = []
+db_assistances = {}
 
 # --------------------------------------------------------------------------------
 # 3. API ENDPOINTS: Rutes of the API
@@ -108,9 +113,14 @@ def create_event(event: CreateEvent):
 
     return new_event
 
-# --- RUTE 4: Set assistance ---
+# --- Rute 4: Get List of all events ---
+@app.get("/events/", response_model=List[EventResponse])
+def list_events():
+    return db_events
+
+# --- RUTE 5: Set assistance ---
 @app.post("/events/{event_id}/assistances/")
-def register_assistance(event_id: int, assistance: UpadeAssistance):
+def register_assistance(event_id: int, assistance: UpdateAssistance):
     if event_id not in db_assistances:
         raise HTTPException(status_code=404, detail="Event not found")
     
@@ -119,9 +129,43 @@ def register_assistance(event_id: int, assistance: UpadeAssistance):
         raise HTTPException(status_code=404, detail="Player not found")
     
     db_assistances[event_id][assistance.player_id] = {
-        "state": assistance.state,
+        "status": assistance.status,
         "comment": assistance.comment,
-        "update_date": datetime.timezone.utc().isoformat()
+        "update_date": datetime.now().isoformat()
     }
 
-    return {"status": "success", "message": f"Assistance updated for player {assistance.player_id} in event {assistance.event_id}"}
+    return {"status": "success", "message": f"Assistance updated for player {assistance.player_id} to {assistance.status} for event {event_id}"}
+
+# --- RUTE 6: Get summary for an event ---
+@app.get("/events/{event_id}/summary/")
+def get_event_summary(event_id: int):
+    if event_id not in db_assistances:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    total_confirmed = 0
+    gender_balance = {GenderEnum.MALE: 0, GenderEnum.FEMALE: 0, GenderEnum.OTHER: 0}
+    position_balance = {PositionEnum.SETTER: 0, PositionEnum.MIDDLE: 0, PositionEnum.OPPOSITE: 0, PositionEnum.OUTSIDE: 0, PositionEnum.LIBERO: 0}
+
+    assistances = db_assistances[event_id]
+
+    for player_id, assistance_data in assistances.items():
+        if assistance_data["status"] == AssistanceStatusEnum.CONFIRMED_YES:
+            total_confirmed += 1
+
+            player = next((p for p in db_players if p.id == player_id), None)
+            if player:
+
+                gender = player.gender
+                if gender in gender_balance:
+                    gender_balance[gender] += 1
+
+                position = player.main_position
+                if position in position_balance:
+                    position_balance[position] += 1
+
+    return {
+        "event_id": event_id,
+        "total_confirmed": total_confirmed,
+        "gender_balance": gender_balance,
+        "position_balance": position_balance
+    }

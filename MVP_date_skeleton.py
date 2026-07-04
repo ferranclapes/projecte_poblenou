@@ -23,7 +23,7 @@ class EventTypeEnum(str, Enum):
     MATCH = "Partit"
     TOURNAMENT = "Torneig"
 
-class AssistanceStateEnum(str, Enum):
+class AssistanceStatusEnum(str, Enum):
     PRESENT = "Present"
     ABSENT = "Absent"
     EXCUSED = "Excusat"
@@ -59,7 +59,7 @@ class Assistance(Base):
     id = Column(Integer, primary_key=True, index=True)
     player_id = Column(Integer, ForeignKey("players.id"), nullable=False)
     event_id = Column(Integer, ForeignKey("events.id"), nullable=False)
-    state = Column(SQLEnum(AssistanceStateEnum), default=AssistanceStateEnum.NOT_CONFIRMED, nullable=False)
+    status = Column(SQLEnum(AssistanceStatusEnum), default=AssistanceStatusEnum.NOT_CONFIRMED, nullable=False)
     comment = Column(String, nullable=True)
     updated_date = Column(DateTime, default=datetime.timezone.utc, onupdate=datetime.timezone.utc)
 
