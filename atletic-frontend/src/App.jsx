@@ -1,12 +1,88 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
+// =============================================================================
+// COMPONENT 1: EVENT SUMMARY PAGE (Opened when clicking on an event in the main page)
+// =============================================================================
+
+function EventSummary({ eventId, onBack }) {
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    axios.get(`http://127.0.0.1:8000/events/${eventId}/summary`)
+      .then(res => {
+        setSummary(res.data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error fetching event summary:', err);
+        setLoading(false);
+      });
+  }, [eventId]);
+
+  if (loading) return <div style={{ padding: '20px', textAlign: 'center' }}>Carregant resum de la pinya...</div>;
+  if (!summary) return <div style={{ padding: '20px', textAlign: 'center' }}>No s'ha pogut carregar el resum.</div>;
+
+  return (
+    <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '500px', margin: '0 auto', padding: '20px' }}>
+      <button 
+        onClick={onBack}
+        style={{ background: '#f0f0f0', border: '1px solid #ccc', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer', marginBottom: '20px', fontWeight: 'bold' }}
+      >
+        ⬅️ Tornar al llistat
+      </button>
+
+      <header style={{ background: '#0070f3', color: 'white', padding: '15px', borderRadius: '10px', textAlign: 'center', marginBottom: '20px' }}>
+        <h1 style={{ margin: 0, fontSize: '20px' }}>📊 Estat de la Convocatòria</h1>
+        <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>Confirmats totals: <strong>{summary.total_confirmed}</strong></p>
+      </header>
+
+      {/* 1. BALANÇ MIXTE */}
+      <section style={{ background: '#fff', border: '1px solid #ccc', borderRadius: '8px', padding: '15px', marginBottom: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+        <h3 style={{ margin: '0 0 10px 0', fontSize: '16px', borderBottom: '2026-07-04 1px solid #eee', paddingBottom: '5px' }}>👫 Balanç Mixte</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-around', fontSize: '14px' }}>
+          <div>🔹 Nois: <strong>{summary.gender_balance["Masculí"]}</strong></div>
+          <div>🔸 Noies: <strong>{summary.gender_balance["Femení"]}</strong></div>
+        </div>
+      </section>
+
+      {/* 2. COMPTADOR DE POSICIONS */}
+      <section style={{ background: '#fff', border: '1px solid #ccc', borderRadius: '8px', padding: '15px', marginBottom: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+        <h3 style={{ margin: '0 0 10px 0', fontSize: '16px', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>🏐 Posicions Cobertes</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px' }}>
+          {Object.entries(summary.position_balance).map(([position, quantity]) => (
+            <div key={position} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px dashed #f0f0f0' }}>
+              <span>{position}:</span>
+              <span style={{ fontWeight: 'bold', color: quantity > 0 ? '#137333' : '#c5221f' }}>{quantity}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Espai reservat per a les alineacions en el futur */}
+      <div style={{ background: '#fafafa', border: '1px dashed #bbb', borderRadius: '8px', padding: '20px', textAlign: 'center', color: '#666', fontSize: '13px' }}>
+        🛠️ <em>Espai per a la planificació de la tècnica i alineacions (Properament)</em>
+      </div>
+
+    </div>
+  );
+
+}
+
+// =============================================================================
+// COMPONENT PRINCIPAL: GESTIONA QUINA PANTALLA ES MOSTRA
+// =============================================================================
+
 function App() {
   const [events, setEvents] = useState([]);
   const [players, setPlayers] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState('');
+  const [currentEventId, setCurrentEventId] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  
+  // Fetch the events and players data from the API
   const fetchdata = () => {
     Promise.all([
       axios.get('http://127.0.0.1:8000/events/'),
@@ -31,11 +107,9 @@ function App() {
     fetchdata();
   }, []);
 
-  // Fetch the events and players data from the API
-  
-
   // Called when clicking an assistance button
-  const handleVote = (eventId, status) => {
+  const handleVote = (eventId, status, e) => {
+    e.stopPropagation(); // Prevent the event card click from triggering
     if (!selectedPlayer) {
       alert('Si us plau, selecciona un jugador abans de votar.');
       return;
@@ -48,7 +122,7 @@ function App() {
     };
 
     axios.post(`http://127.0.0.1:8000/events/${eventId}/assistances/`, payload)
-    .then(response => {
+    .then(() => {
       alert(`S'ha registrat la teva assistència: ${status}`);
       fetchdata(); // Refresh the events data after voting
     })
@@ -62,42 +136,43 @@ function App() {
     return <div style={{padding: '20px', textAlign: 'center'}}>Carregant l'applicació del Poblenou...</div>;
   }
 
+  // If an event is selected, show the EventSummary component
+  if (currentEventId !== null) {
+    return (
+      <EventSummary
+        eventId={currentEventId}
+        onBack={() => setCurrentEventId(null)}
+      />
+    );
+  }
+
 
   return (
     <div style={{fontFamily: 'Arial, sans-serif', maxWidth: '500px', margin: '0 auto', padding: '20px'}}>
-
       {/*Capçalera*/}
       <header style={{background: '#0070f3', color: 'white', padding: '15px', borderRadius: '10px', textAlign: 'center', marginBottom: '20px'}}>
         <h1 style={{ margin: 0, fontSize: '20px' }}>🏐 Atlètic Poblenou</h1>
         <p style={{ margin: '5px 0 0 0', fontSize: '12px' }}>El millor equip del món</p>
       </header>
-
       {/* Selector de jugador simulat (Temporal fins que s'implementi un login real)*/}
       <div style={{ background: '#f0f4f8', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #d0e0f0' }}>
-        <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '5px', color: '#333' }}>
-          👤 Qui ets? (Simulador de Login)
-        </label>
-        <select 
-          value={selectedPlayer} 
-          onChange={(e) => setSelectedPlayer(e.target.value)}
-          style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', fontSize: '14px' }}
-        >
+        <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '5px', color: '#333' }}>👤 Qui ets? (Simulador de Login)</label>
+        <select value={selectedPlayer} onChange={(e) => setSelectedPlayer(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', fontSize: '14px' }}>
           {players.length === 0 && <option value="">Crea un jugador al Swagger primer!</option>}
-          {players.map(p => (
-            <option key={p.id} value={p.id}>{p.name} ({p.main_position})</option>
-          ))}
+          {players.map(p => <option key={p.id} value={p.id}>{p.name} ({p.main_position})</option>)}
         </select>
       </div>
-
+      {/* Llistat d'events */}
       <h2 style={{ fontSize: '18px', marginBottom: '15px' }}>Properes Convocatòries</h2>
-
-      {/* Si no hi ha events a la BBDD */}
       {events.length === 0 && <p>No hi ha cap event programat.</p>}
-
       {/* Bucle que recorre els teves events d'SQL i en fa una targeta per a cadascun */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         {events.map((event) => (
-          <div key={event.id} style={{ border: '1px solid #ccc', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+          <div 
+          key={event.id} 
+          onClick={() => setCurrentEventId(event.id)}
+          style={{ border: '1px solid #ccc', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{
                 background: event.event_type === 'Partit' ? '#ff4d4d' : '#4caf50',
@@ -119,19 +194,19 @@ function App() {
             {/* Botons d'assistència */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', paddingTop: '10px', borderTop: '1px solid #eee' }}>
               <button
-                onClick={() => handleVote(event.id, 'Assisteix')}
+                onClick={(e) => handleVote(event.id, 'Assisteix', e)}
                 style={{ background: '#e6f4ea', color: '#137333', border: '1px solid #137333', padding: '8px 4px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
               >
                 🟢 Vinc!
               </button>
               <button 
-                onClick={() => handleVote(event.id, 'No assisteix')}
+                onClick={(e) => handleVote(event.id, 'No assisteix', e)}
                 style={{ background: '#fce8e6', color: '#c5221f', border: '1px solid #c5221f', padding: '8px 4px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
               >
                 🔴 No puc
               </button>
               <button 
-                onClick={() => handleVote(event.id, 'Dubte')}
+                onClick={(e) => handleVote(event.id, 'Dubte', e)}
                 style={{ background: '#fef7e0', color: '#b06000', border: '1px solid #b06000', padding: '8px 4px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
               >
                 🟡 Dubte
