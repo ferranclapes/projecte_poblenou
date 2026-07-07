@@ -9,6 +9,8 @@ function App() {
   const [players, setPlayers] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState('');
   const [currentEventId, setCurrentEventId] = useState(null);
+  
+  const [editingEvent, setEditingEvent] = useState(null);
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDayStr, setSelectedDayStr] = useState(new Date().toISOString().split('T')[0]);
@@ -69,6 +71,21 @@ function App() {
   const dayHasEvents = (dateStr) => {
     return events.some(event => event.date_time.split('T')[0] === dateStr);
   };
+
+  const handleDeleteEvent = (eventId, e) => {
+    e.stopPropagation();
+    if (window.confirm("⚠️ Segur que vols eliminar aquesta convocatòria? Es borraran totes les assistències.")) {
+      axios.delete(`http://127.0.0.1:8000/events/${eventId}`)
+        .then(() => {
+          alert("🗑️ Convocatòria eliminada correctament!");
+          fetchdata();
+        })
+        .catch(error => {
+          console.error("Error al eliminar la convocatòria:", error);
+          alert("Hi ha hagut un error al eliminar la convocatòria.");
+        });
+    }
+  }
 
   // Called when clicking an assistance button
   const handleVote = (eventId, status, e) => {
@@ -161,7 +178,12 @@ function App() {
       </div>
 
       {/* 3. COMPONENT FORMULARI (Invocat de forma neta i modular) 📦 */}
-      <EventForm onEventCreated={fetchdata} />
+      <EventForm 
+        key={editingEvent ? `edit-${editingEvent.id}` : 'nou-event'}
+        onEventCreated={fetchdata} 
+        editingEvent={editingEvent} 
+        onCancelEdit={() => setEditingEvent(null)} 
+      />
 
       {/* 4. LLISTAT D'EVENTS */}
       <h2 style={{ fontSize: '16px', color: '#555', marginBottom: '12px' }}>
@@ -178,7 +200,11 @@ function App() {
         {filteredEvents.map((event) => (
           <div key={event.id} onClick={() => setCurrentEventId(event.id)} style={{ border: '1px solid #eee', borderRadius: '12px', padding: '15px', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', background: '#fff', cursor: 'pointer' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ background: event.event_type === 'Partit' ? '#ff4d4d' : '#4caf50', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>{event.event_type}</span>
+              <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                <span style={{ background: event.event_type === 'Partit' ? '#ff4d4d' : '#4caf50', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>{event.event_type}</span>
+                <button onClick={(e) => { e.stopPropagation(); setEditingEvent(event); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px' }} title="Editar">✏️</button>
+                <button onClick={(e) => handleDeleteEvent(event.id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px' }} title="Eliminar">🗑️</button>
+              </div>
               <small style={{ color: '#666', fontWeight: 'bold' }}>🕒 {new Date(event.date_time).toLocaleTimeString('ca-ES', { hour: '2-digit', minute: '2-digit' })}</small>
             </div>
             <h3 style={{ margin: '12px 0 6px 0', fontSize: '16px', color: '#222' }}>{event.name || "Entrenament de l'equip"}</h3>

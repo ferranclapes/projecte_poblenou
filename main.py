@@ -94,6 +94,31 @@ def list_events(db: Session = Depends(get_db)):
     db_events = db.query(models.EventModel).all()    
     return db_events
 
+@app.put("/events/{event_id}/")
+def update_event(event_id: int, event_data: CreateEvent, db: Session = Depends(get_db)):
+    db_event = db.query(models.EventModel).filter(models.EventModel.id == event_id).first()
+    if not db_event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    db_event.event_type = event_data.event_type
+    db_event.name = event_data.name
+    db_event.date_time = event_data.date_time
+    db_event.location = event_data.location
+
+    db.commit()
+    db.refresh(db_event)
+    return db_event
+
+@app.delete("/events/{event_id}/")
+def delete_event(event_id: int, db: Session = Depends(get_db)):
+    event = db.query(models.EventModel).filter(models.EventModel.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    db.delete(event)
+    db.commit()
+    return {"status": "success", "message": f"Event {event_id} deleted successfully"}
+
 # --- 3. ASSISTANCE ---
 @app.post("/events/{event_id}/assistances/")
 def register_assistance(event_id: int, assistance: UpdateAssistance, db: Session = Depends(get_db)):
