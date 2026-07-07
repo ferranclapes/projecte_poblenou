@@ -1,92 +1,20 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
-// =============================================================================
-// COMPONENT 1: EVENT SUMMARY PAGE (Opened when clicking on an event in the main page)
-// =============================================================================
-
-function EventSummary({ eventId, onBack }) {
-  const [summary, setSummary] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    axios.get(`http://127.0.0.1:8000/events/${eventId}/summary`)
-      .then(res => {
-        setSummary(res.data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error fetching event summary:', err);
-        setLoading(false);
-      });
-  }, [eventId]);
-
-  if (loading) return <div style={{ padding: '20px', textAlign: 'center' }}>Carregant resum de la pinya...</div>;
-  if (!summary) return <div style={{ padding: '20px', textAlign: 'center' }}>No s'ha pogut carregar el resum.</div>;
-
-  return (
-    <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '500px', margin: '0 auto', padding: '20px' }}>
-      <button 
-        onClick={onBack}
-        style={{ background: '#f0f0f0', border: '1px solid #ccc', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer', marginBottom: '20px', fontWeight: 'bold' }}
-      >
-        ⬅️ Tornar al llistat
-      </button>
-
-      <header style={{ background: '#0070f3', color: 'white', padding: '15px', borderRadius: '10px', textAlign: 'center', marginBottom: '20px' }}>
-        <h1 style={{ margin: 0, fontSize: '20px' }}>📊 Estat de la Convocatòria</h1>
-        <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>Confirmats totals: <strong>{summary.total_confirmed}</strong></p>
-      </header>
-
-      {/* 1. BALANÇ MIXTE */}
-      <section style={{ background: '#fff', border: '1px solid #ccc', borderRadius: '8px', padding: '15px', marginBottom: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-        <h3 style={{ margin: '0 0 10px 0', fontSize: '16px', borderBottom: '2026-07-04 1px solid #eee', paddingBottom: '5px' }}>👫 Balanç Mixte</h3>
-        <div style={{ display: 'flex', justifyContent: 'space-around', fontSize: '14px' }}>
-          <div>🔹 Nois: <strong>{summary.gender_balance["Masculí"]}</strong></div>
-          <div>🔸 Noies: <strong>{summary.gender_balance["Femení"]}</strong></div>
-        </div>
-      </section>
-
-      {/* 2. COMPTADOR DE POSICIONS */}
-      <section style={{ background: '#fff', border: '1px solid #ccc', borderRadius: '8px', padding: '15px', marginBottom: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-        <h3 style={{ margin: '0 0 10px 0', fontSize: '16px', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>🏐 Posicions Cobertes</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px' }}>
-          {Object.entries(summary.position_balance).map(([position, quantity]) => (
-            <div key={position} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px dashed #f0f0f0' }}>
-              <span>{position}:</span>
-              <span style={{ fontWeight: 'bold', color: quantity > 0 ? '#137333' : '#c5221f' }}>{quantity}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Espai reservat per a les alineacions en el futur */}
-      <div style={{ background: '#fafafa', border: '1px dashed #bbb', borderRadius: '8px', padding: '20px', textAlign: 'center', color: '#666', fontSize: '13px' }}>
-        🛠️ <em>Espai per a la planificació de la tècnica i alineacions (Properament)</em>
-      </div>
-
-    </div>
-  );
-
-}
-
-// =============================================================================
-// COMPONENT PRINCIPAL: GESTIONA QUINA PANTALLA ES MOSTRA
-// =============================================================================
+import EventSummary from './components/EventSummary';
+import EventForm from './components/EventForm';
 
 function App() {
   const [events, setEvents] = useState([]);
   const [players, setPlayers] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState('');
   const [currentEventId, setCurrentEventId] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const [eventType, setEventType] = useState('Entrenament');
-  const [eventName, setEventName] = useState('');
-  const [eventDateTime, setEventDateTime] = useState('');
-  const [eventLocation, setEventLocation] = useState('');
+
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDayStr, setSelectedDayStr] = useState(new Date().toISOString().split('T')[0]);
+
   const [loading, setLoading] = useState(true);
 
-  
   // Fetch the events and players data from the API
   const fetchdata = () => {
     Promise.all([
@@ -112,37 +40,35 @@ function App() {
     fetchdata();
   }, []);
 
-  const handleCreateEvent = (e) => {
-    e.preventDefault();
+  // Calculate the days of the week
+  const getWeekDays = (baseDate) => {
+    const current = new Date(baseDate);
+    const day = current.getDay(); // 0 (Sunday) to 6 (Saturday)
+    const diffToMonday = day === 0 ? -6 : 1 - day; // Adjust for Sunday
+    const monday = new Date(current.setDate(current.getDate() + diffToMonday));
 
-    if (!eventDateTime){
-      alert('Si us plau, selecciona la data i hora de l\'esdeveniment.');
-      return;
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      days.push(d);
     }
+    return days;
+  };
 
-    const payload = {
-      event_type: eventType,
-      name: eventName || null,
-      date_time: new Date(eventDateTime).toISOString(),
-      location: eventLocation || null
-    };
+  // Change the current week by a given offset (in weeks)
+  const changeWeek = (weekOffset) => {
+    const newDate = new Date(currentDate);
+    newDate.setDate(newDate.getDate() + (weekOffset * 7));
+    setCurrentDate(newDate);
+  };
 
-    axios.post('http://127.0.0.1:8000/events/', payload)
-      .then(() => {
-        alert('L\'esdeveniment ha estat creat amb èxit.');
-        setEventType('Entrenament');
-        setEventName('');
-        setEventDateTime('');
-        setEventLocation('');
-        setShowForm(false); // Hide the form after successful creation
+  const weekDays = getWeekDays(currentDate);
 
-        fetchdata(); // Refresh the events data after creating an event
-      })
-      .catch(error => {
-        console.error("Error al crear l'esdeveniment:", error);
-        alert('Hi ha hagut un error al crear l\'esdeveniment.');
-      });
-  }
+  // Check if a given date has any events
+  const dayHasEvents = (dateStr) => {
+    return events.some(event => event.date_time.split('T')[0] === dateStr);
+  };
 
   // Called when clicking an assistance button
   const handleVote = (eventId, status, e) => {
@@ -153,7 +79,7 @@ function App() {
     }
 
     const payload = {
-      player_id: parseInt(selectedPlayer),
+      player_id: parseInt(selectedPlayer, 10),
       status: status,
       comment: ""
     };
@@ -183,122 +109,92 @@ function App() {
     );
   }
 
+  const filteredEvents = events.filter(event => event.date_time.split('T')[0] === selectedDayStr);
+
 
   return (
-    <div style={{fontFamily: 'Arial, sans-serif', maxWidth: '500px', margin: '0 auto', padding: '20px'}}>
-      {/*Capçalera*/}
-      <header style={{background: '#0070f3', color: 'white', padding: '15px', borderRadius: '10px', textAlign: 'center', marginBottom: '20px'}}>
-        <h1 style={{ margin: 0, fontSize: '20px' }}>🏐 Atlètic Poblenou</h1>
-        <p style={{ margin: '5px 0 0 0', fontSize: '12px' }}>El millor equip del món</p>
-      </header>
-      {/* Selector de jugador simulat //! (Temporal fins que s'implementi un login real)*/}
-      <div style={{ background: '#f0f4f8', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #d0e0f0' }}>
-        <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '5px', color: '#333' }}>👤 Qui ets? (Simulador de Login)</label>
-        <select value={selectedPlayer} onChange={(e) => setSelectedPlayer(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', fontSize: '14px' }}>
-          {players.length === 0 && <option value="">Crea un jugador al Swagger primer!</option>}
-          {players.map(p => <option key={p.id} value={p.id}>{p.name} ({p.main_position})</option>)}
-        </select>
-      </div>
-      {/* Crear Events nous //! (Temporal fins que s'implementi accés d'entrenador) */}
-      <div style={{ marginBottom: '20px' }}>
-        <button 
-          onClick={() => setShowForm(!showForm)}
-          style={{ width: '100%', background: '#222', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
-        >
-          {showForm ? "🔼 Tancar Formulari" : "➕ Nova Convocatòria (Partit/Entrenament)"}
-        </button>
-        {/* Formulari Desplegable Condicional */}
-        {showForm && (
-          <form onSubmit={handleCreateEvent} style={{ background: '#fafafa', border: '1px solid #222', borderRadius: '8px', padding: '15px', marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>Tipus d'Esdeveniment:</label>
-              <select value={eventType} onChange={(e) => setEventType(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}>
-                <option value="Entrenament">Entrenament</option>
-                <option value="Partit">Partit</option>
-              </select>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>Nom / Rival (Opcional):</label>
-              <input type="text" placeholder="Ex: VS Esplugues o Física a la platja" value={eventName} onChange={(e) => setEventName(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>Data i Hora:</label>
-              <input type="datetime-local" value={eventDateTime} onChange={(e) => setEventDateTime(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>Lloc (Opcional):</label>
-              <input type="text" placeholder="Ex: Pavelló Poblenou o Platja del Bogatell" value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
-            </div>
-
-            <button type="submit" style={{ background: '#0070f3', color: 'white', border: 'none', padding: '10px', borderRadius: '5px', fontWeight: 'bold', cursor: 'pointer', marginTop: '5px' }}>
-              💾 Publicar Convocatòria
-            </button>
-          </form>
-        )}
+    <div style={{fontFamily: 'Arial, sans-serif', maxWidth: '500px', margin: '0 auto', padding: '20px', background: '#fcfcfc', minHeight: '100vh'}}>
+      
+      {/* 1. SECTOR SUPERIOR: USUARI ACTIU */}
+      <div style={{ background: '#222', color: '#fff', padding: '12px 15px', borderRadius: '12px', marginBottom: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '18px' }}>👤</span>
+          <div>
+            <small style={{ color: '#aaa', display: 'block', fontSize: '10px', textTransform: 'uppercase' }}>Jugador actiu</small>
+            <select value={selectedPlayer} onChange={(e) => setSelectedPlayer(e.target.value)} style={{ background: 'transparent', color: '#fff', border: 'none', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', outline: 'none', padding: 0 }}>
+              {players.map(p => <option key={p.id} value={p.id} style={{color: '#000'}}>{p.name}</option>)}
+            </select>
+          </div>
+        </div>
+        <span style={{ background: '#0070f3', color: 'white', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold' }}>🏐 MVP</span>
       </div>
 
-      {/* Llistat d'events */}
-      <h2 style={{ fontSize: '18px', marginBottom: '15px' }}>Properes Convocatòries</h2>
-      {events.length === 0 && <p>No hi ha cap event programat.</p>}
-      {/* Bucle que recorre els teves events d'SQL i en fa una targeta per a cadascun */}
+      {/* 2. CALENDARI HORITZONTAL SETMANAL */}
+      <div style={{ background: '#fff', borderRadius: '12px', padding: '15px', border: '1px solid #eee', marginBottom: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <button onClick={() => changeWeek(-1)} style={{ background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer', padding: '5px' }}>⬅️</button>
+          <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#444', textTransform: 'capitalize' }}>
+            {weekDays[0].toLocaleDateString('ca-ES', { month: 'long', year: 'numeric' })}
+          </span>
+          <button onClick={() => changeWeek(1)} style={{ background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer', padding: '5px' }}>➡️</button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '5px', textAlign: 'center' }}>
+          {weekDays.map((date) => {
+            const dateStr = date.toISOString().split('T')[0];
+            const isSelected = dateStr === selectedDayStr;
+            const hasEvent = dayHasEvents(dateStr);
+            const diaNum = date.getDate();
+            const nomDia = date.toLocaleDateString('ca-ES', { weekday: 'narrow' });
+
+            return (
+              <div key={dateStr} onClick={() => setSelectedDayStr(dateStr)} style={{ padding: '10px 5px', borderRadius: '8px', cursor: 'pointer', background: isSelected ? '#0070f3' : 'transparent', color: isSelected ? '#fff' : '#333', transition: '0.2s', position: 'relative', fontWeight: isSelected ? 'bold' : 'normal' }}>
+                <small style={{ display: 'block', fontSize: '10px', color: isSelected ? '#fff' : '#999', marginBottom: '4px' }}>{nomDia}</small>
+                <span style={{ fontSize: '15px' }}>{diaNum}</span>
+                {hasEvent && (
+                  <span style={{ position: 'absolute', bottom: '4px', left: '50%', transform: 'translateX(-50%)', width: '5px', height: '5px', borderRadius: '50%', background: isSelected ? '#fff' : '#0070f3' }} />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 3. COMPONENT FORMULARI (Invocat de forma neta i modular) 📦 */}
+      <EventForm onEventCreated={fetchdata} />
+
+      {/* 4. LLISTAT D'EVENTS */}
+      <h2 style={{ fontSize: '16px', color: '#555', marginBottom: '12px' }}>
+        Esdeveniments del dia {new Date(selectedDayStr).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })}
+      </h2>
+      
+      {filteredEvents.length === 0 && (
+        <p style={{ color: '#999', textAlign: 'center', padding: '30px 0', fontSize: '14px', background: '#fff', borderRadius: '12px', border: '1px dashed #eee' }}>
+          🏖️ Cap esdeveniment planificat per aquest dia. ¡Descans!
+        </p>
+      )}
+      
       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        {events.map((event) => (
-          <div 
-          key={event.id} 
-          onClick={() => setCurrentEventId(event.id)}
-          style={{ border: '1px solid #ccc', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
-          >
+        {filteredEvents.map((event) => (
+          <div key={event.id} onClick={() => setCurrentEventId(event.id)} style={{ border: '1px solid #eee', borderRadius: '12px', padding: '15px', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', background: '#fff', cursor: 'pointer' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{
-                background: event.event_type === 'Partit' ? '#ff4d4d' : '#4caf50',
-                color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold'
-              }}>
-                {event.event_type}
-              </span>
-              <small style={{ color: '#666' }}>{new Date(event.date_time).toLocaleDateString()}</small>
+              <span style={{ background: event.event_type === 'Partit' ? '#ff4d4d' : '#4caf50', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>{event.event_type}</span>
+              <small style={{ color: '#666', fontWeight: 'bold' }}>🕒 {new Date(event.date_time).toLocaleTimeString('ca-ES', { hour: '2-digit', minute: '2-digit' })}</small>
             </div>
+            <h3 style={{ margin: '12px 0 6px 0', fontSize: '16px', color: '#222' }}>{event.name || "Entrenament de l'equip"}</h3>
+            <p style={{ margin: '0 0 15px 0', fontSize: '13px', color: '#666' }}>📍 {event.location || "Per determinar"}</p>
             
-            <h3 style={{ margin: '10px 0 5px 0', fontSize: '16px' }}>
-              {event.name ? event.name : "Entrenament de l'equip"}
-            </h3>
-            
-            <p style={{ margin: 0, fontSize: '14px', color: '#555' }}>
-              📍 <strong>Lloc:</strong> {event.location || "Per determinar"}
-            </p>
-            
-            {/* Botons d'assistència */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', paddingTop: '10px', borderTop: '1px solid #eee' }}>
-              <button
-                onClick={(e) => handleVote(event.id, 'Assisteix', e)}
-                style={{ background: '#e6f4ea', color: '#137333', border: '1px solid #137333', padding: '8px 4px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
-              >
-                🟢 Vinc!
-              </button>
-              <button 
-                onClick={(e) => handleVote(event.id, 'No assisteix', e)}
-                style={{ background: '#fce8e6', color: '#c5221f', border: '1px solid #c5221f', padding: '8px 4px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
-              >
-                🔴 No puc
-              </button>
-              <button 
-                onClick={(e) => handleVote(event.id, 'Dubte', e)}
-                style={{ background: '#fef7e0', color: '#b06000', border: '1px solid #b06000', padding: '8px 4px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
-              >
-                🟡 Dubte
-              </button>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', paddingTop: '10px', borderTop: '1px solid #f5f5f5' }}>
+              <button onClick={(e) => handleVote(event.id, 'Assisteix', e)} style={{ background: '#e6f4ea', color: '#137333', border: 'none', padding: '8px 4px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}>🟢 Vinc!</button>
+              <button onClick={(e) => handleVote(event.id, 'No assisteix', e)} style={{ background: '#fce8e6', color: '#c5221f', border: 'none', padding: '8px 4px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}>🔴 No puc</button>
+              <button onClick={(e) => handleVote(event.id, 'Dubte', e)} style={{ background: '#fef7e0', color: '#b06000', border: 'none', padding: '8px 4px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}>🟡 Dubte</button>
             </div>
-
           </div>
         ))}
       </div>
 
     </div>
-
   );
-
 }
 
 export default App;
