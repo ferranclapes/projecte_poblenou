@@ -79,6 +79,11 @@ function App() {
   const [players, setPlayers] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState('');
   const [currentEventId, setCurrentEventId] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [eventType, setEventType] = useState('Entrenament');
+  const [eventName, setEventName] = useState('');
+  const [eventDateTime, setEventDateTime] = useState('');
+  const [eventLocation, setEventLocation] = useState('');
   const [loading, setLoading] = useState(true);
 
   
@@ -106,6 +111,38 @@ function App() {
   useEffect(() => {
     fetchdata();
   }, []);
+
+  const handleCreateEvent = (e) => {
+    e.preventDefault();
+
+    if (!eventDateTime){
+      alert('Si us plau, selecciona la data i hora de l\'esdeveniment.');
+      return;
+    }
+
+    const payload = {
+      event_type: eventType,
+      name: eventName || null,
+      date_time: new Date(eventDateTime).toISOString(),
+      location: eventLocation || null
+    };
+
+    axios.post('http://127.0.0.1:8000/events/', payload)
+      .then(() => {
+        alert('L\'esdeveniment ha estat creat amb èxit.');
+        setEventType('Entrenament');
+        setEventName('');
+        setEventDateTime('');
+        setEventLocation('');
+        setShowForm(false); // Hide the form after successful creation
+
+        fetchdata(); // Refresh the events data after creating an event
+      })
+      .catch(error => {
+        console.error("Error al crear l'esdeveniment:", error);
+        alert('Hi ha hagut un error al crear l\'esdeveniment.');
+      });
+  }
 
   // Called when clicking an assistance button
   const handleVote = (eventId, status, e) => {
@@ -154,7 +191,7 @@ function App() {
         <h1 style={{ margin: 0, fontSize: '20px' }}>🏐 Atlètic Poblenou</h1>
         <p style={{ margin: '5px 0 0 0', fontSize: '12px' }}>El millor equip del món</p>
       </header>
-      {/* Selector de jugador simulat (Temporal fins que s'implementi un login real)*/}
+      {/* Selector de jugador simulat //! (Temporal fins que s'implementi un login real)*/}
       <div style={{ background: '#f0f4f8', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #d0e0f0' }}>
         <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '5px', color: '#333' }}>👤 Qui ets? (Simulador de Login)</label>
         <select value={selectedPlayer} onChange={(e) => setSelectedPlayer(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', fontSize: '14px' }}>
@@ -162,6 +199,47 @@ function App() {
           {players.map(p => <option key={p.id} value={p.id}>{p.name} ({p.main_position})</option>)}
         </select>
       </div>
+      {/* Crear Events nous //! (Temporal fins que s'implementi accés d'entrenador) */}
+      <div style={{ marginBottom: '20px' }}>
+        <button 
+          onClick={() => setShowForm(!showForm)}
+          style={{ width: '100%', background: '#222', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+        >
+          {showForm ? "🔼 Tancar Formulari" : "➕ Nova Convocatòria (Partit/Entrenament)"}
+        </button>
+        {/* Formulari Desplegable Condicional */}
+        {showForm && (
+          <form onSubmit={handleCreateEvent} style={{ background: '#fafafa', border: '1px solid #222', borderRadius: '8px', padding: '15px', marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>Tipus d'Esdeveniment:</label>
+              <select value={eventType} onChange={(e) => setEventType(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}>
+                <option value="Entrenament">Entrenament</option>
+                <option value="Partit">Partit</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>Nom / Rival (Opcional):</label>
+              <input type="text" placeholder="Ex: VS Esplugues o Física a la platja" value={eventName} onChange={(e) => setEventName(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>Data i Hora:</label>
+              <input type="datetime-local" value={eventDateTime} onChange={(e) => setEventDateTime(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>Lloc (Opcional):</label>
+              <input type="text" placeholder="Ex: Pavelló Poblenou o Platja del Bogatell" value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
+            </div>
+
+            <button type="submit" style={{ background: '#0070f3', color: 'white', border: 'none', padding: '10px', borderRadius: '5px', fontWeight: 'bold', cursor: 'pointer', marginTop: '5px' }}>
+              💾 Publicar Convocatòria
+            </button>
+          </form>
+        )}
+      </div>
+
       {/* Llistat d'events */}
       <h2 style={{ fontSize: '18px', marginBottom: '15px' }}>Properes Convocatòries</h2>
       {events.length === 0 && <p>No hi ha cap event programat.</p>}
