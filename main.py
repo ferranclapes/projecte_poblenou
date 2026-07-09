@@ -1,11 +1,13 @@
 from fastapi import FastAPI, HTTPException, Depends
-from pydantic import BaseModel
-from datetime import datetime
-from typing import List, Optional
+from typing import List
 from sqlalchemy.orm import Session
 
-from database import engine, Base, get_db
-import models
+from backend.database import engine, Base, get_db
+import backend.models as models
+import backend.schemas as schemas
+
+import backend.auth as auth
+from fastapi.security import HTTPBearer
 
 # Force SQLAlchemy to create the database tables if non existent
 Base.metadata.create_all(bind=engine)
@@ -22,62 +24,47 @@ app.add_middleware(
 )
 
 
-# -----------------------------------------------------------------------------
-# 1. SCHEMAS (Pydantic): Define how is the data we receive or send
-# -----------------------------------------------------------------------------
 
-class CreatePlayer(BaseModel):
-    name: str
-    gender: models.GenderEnum
-    main_position: models.PositionEnum
-    secondary_position: Optional[models.PositionEnum] = None
-
-class PlayerResponse(CreatePlayer):
-    id: int
-    is_admin: bool
-
-    class Config:
-        from_attributes = True
-
-class CreateEvent(BaseModel):
-    event_type: str
-    name: Optional[str] = None
-    date_time: datetime
-    location: Optional[str] = None
-
-class EventResponse(CreateEvent):
-    id: int
-
-class UpdateAssistance(BaseModel):
-    player_id: int
-    status: str
-    comment: Optional[str] = None
 
 # --------------------------------------------------------------------------------
 # 3. API ENDPOINTS: Rutes of the API connected to the DB
 # --------------------------------------------------------------------------------
 
 # --- 1. PLAYER ---
-@app.post("/players/", response_model=PlayerResponse, status_code=201)
-def create_player(player: CreatePlayer, db: Session = Depends(get_db)):
+@app.post("/players/", response_model=schemas.PlayerResponse, status_code=201)
+def create_player(player: schemas.CreatePlayer, db: Session = Depends(get_db)):
+    existing_player = db.query(models.PlayerModel).filter(models.PlayerModel.name == player.name).first()
+    if existing_player:
+       raise HTTPException(status_code=400, detail="Ja existeix un jugador amb aquest nom.")
+    
+    plain_password = str(player.password)
+
+    hashed_password = auth.get_password_hash(plain_password)
+
     db_player = models.PlayerModel(
         name=player.name,
         gender=player.gender,
         main_position=player.main_position,
         secondary_position=player.secondary_position,
+        role = player.role,
+        hashed_password=hashed_password,
+        is_admin = True if player.role == models.UserRoleEnum.COACH else False
     )
     db.add(db_player)
     db.commit()
     db.refresh(db_player)
     return db_player
 
-@app.get("/players/", response_model=List[PlayerResponse])
+@app.get("/players/", response_model=List[schemas.PlayerResponse])
 def list_players(db: Session = Depends(get_db)):
     return db.query(models.PlayerModel).all()
 
 # --- 2. EVENT ---
-@app.post("/events/", response_model=EventResponse, status_code=201)
-def create_event(event: CreateEvent, db: Session = Depends(get_db)):
+@app.post("/events/", response_model=schemas.EventResponse, status_code=201)
+def create_event(event: schemas.CreateEvent, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+    if current_user['is_admin'] != True:
+        raise HTTPException(status_code=403, detail="Només els entrenadors o administradors poden crear esdeveniments.")
+
     db_event = models.EventModel(
         event_type=event.event_type,
         name=event.name,
@@ -89,13 +76,16 @@ def create_event(event: CreateEvent, db: Session = Depends(get_db)):
     db.refresh(db_event)
     return db_event
 
-@app.get("/events/", response_model=List[EventResponse])
+@app.get("/events/", response_model=List[schemas.EventResponse])
 def list_events(db: Session = Depends(get_db)):
     db_events = db.query(models.EventModel).all()    
     return db_events
 
 @app.put("/events/{event_id}/")
-def update_event(event_id: int, event_data: CreateEvent, db: Session = Depends(get_db)):
+def update_event(event_id: int, event_data: schemas.CreateEvent, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+    if current_user['is_admin'] != True and current_user['role'] != models.UserRoleEnum.COACH:
+        raise HTTPException(status_code=403, detail="Només els entrenadors o administradors poden actualitzar esdeveniments.")
+
     db_event = db.query(models.EventModel).filter(models.EventModel.id == event_id).first()
     if not db_event:
         raise HTTPException(status_code=404, detail="Event not found")
@@ -110,7 +100,10 @@ def update_event(event_id: int, event_data: CreateEvent, db: Session = Depends(g
     return db_event
 
 @app.delete("/events/{event_id}/")
-def delete_event(event_id: int, db: Session = Depends(get_db)):
+def delete_event(event_id: int, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+    if current_user['is_admin'] != True and current_user['role'] != models.UserRoleEnum.COACH:
+        raise HTTPException(status_code=403, detail="Només els entrenadors o administradors poden eliminar esdeveniments.")
+
     event = db.query(models.EventModel).filter(models.EventModel.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
@@ -121,7 +114,7 @@ def delete_event(event_id: int, db: Session = Depends(get_db)):
 
 # --- 3. ASSISTANCE ---
 @app.post("/events/{event_id}/assistances/")
-def register_assistance(event_id: int, assistance: UpdateAssistance, db: Session = Depends(get_db)):
+def register_assistance(event_id: int, assistance: schemas.UpdateAssistance, db: Session = Depends(get_db)):
     event_exists = db.query(models.EventModel).filter(models.EventModel.id == event_id).first()
     if not event_exists:
         raise HTTPException(status_code=404, detail="Event not found")
@@ -184,4 +177,25 @@ def get_event_summary(event_id: int, db: Session = Depends(get_db)):
         "total_confirmed": total_confirmed,
         "gender_balance": gender_balance,
         "position_balance": position_balance
+    }
+
+# --- 5. AUTHENTICATION ---
+@app.post("/auth/login/")
+def login(login_data: schemas.LoginRequest, db: Session = Depends(get_db)):
+    db_player = db.query(models.PlayerModel).filter(models.PlayerModel.name == login_data.username).first()
+    if not db_player:
+        raise HTTPException(status_code=401, detail="Nom d'usuari")
+                                                                                    #! Change message to make them ambiguous
+    if not auth.verify_password(login_data.password, db_player.hashed_password):
+        raise HTTPException(status_code=401, detail="contrasenya incorrectes")
+    
+    access_token = auth.create_access_token(data={"id": db_player.id, "user": db_player.name, "role": db_player.role.value, "is_admin": db_player.is_admin})
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "role": db_player.role.value,
+        "is_admin": db_player.is_admin,
+        "player_id": db_player.id,
+        "player_name": db_player.name
     }

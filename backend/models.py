@@ -2,7 +2,11 @@ from datetime import datetime
 from enum import Enum
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
-from database import Base
+from backend.database import Base
+
+class UserRoleEnum(str, Enum):
+    PLAYER = "jugador"
+    COACH = "entrenador"
 
 class GenderEnum(str, Enum):
     MALE = "Masculí"
@@ -32,7 +36,11 @@ class PlayerModel(Base):
     gender = Column(SQLEnum(GenderEnum), nullable=False)
     main_position = Column(SQLEnum(PositionEnum), nullable=False)
     secondary_position = Column(SQLEnum(PositionEnum), nullable=True)
+
+    role = Column(SQLEnum(UserRoleEnum), default=UserRoleEnum.PLAYER, nullable=False)
     is_admin = Column(Boolean, default=False)
+
+    hashed_password = Column(String, unique=True, index=True, nullable=True)
     
     assistances = relationship("AssistanceModel", back_populates="player")
 
