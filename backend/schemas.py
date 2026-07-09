@@ -13,9 +13,15 @@ class LoginRequest(BaseModel):
 
 class PlayerBase(BaseModel):
     name: str
-    gender: models.GenderEnum
+    surname1: str
+    surname2: str
+    prefered_name: Optional[str] = None
+    pronouns: Optional[models.PronounsEnum] = None
+
+    sex: models.SexEnum
     main_position: models.PositionEnum
     secondary_position: Optional[models.PositionEnum] = None
+
     role: Optional[models.UserRoleEnum] = models.UserRoleEnum.PLAYER
 
 class CreatePlayer(PlayerBase):

@@ -42,8 +42,13 @@ def create_player(player: schemas.CreatePlayer, db: Session = Depends(get_db)):
     hashed_password = auth.get_password_hash(plain_password)
 
     db_player = models.PlayerModel(
+        username=f"{player.name.lower()}_{player.surname1.lower()}_{player.surname2.lower()}",
         name=player.name,
-        gender=player.gender,
+        surname1=player.surname1,
+        surname2=player.surname2,
+        prefered_name=player.prefered_name,
+        pronouns=player.pronouns,
+        sex=player.sex,
         main_position=player.main_position,
         secondary_position=player.secondary_position,
         role = player.role,
@@ -150,7 +155,7 @@ def get_event_summary(event_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Event not found")
     
     total_confirmed = 0
-    gender_balance = {models.GenderEnum.MALE: 0, models.GenderEnum.FEMALE: 0}
+    gender_balance = {models.SexEnum.MALE: 0, models.SexEnum.FEMALE: 0}
     position_balance = {
         models.PositionEnum.SETTER: 0,
         models.PositionEnum.MIDDLE: 0,
@@ -182,14 +187,14 @@ def get_event_summary(event_id: int, db: Session = Depends(get_db)):
 # --- 5. AUTHENTICATION ---
 @app.post("/auth/login/")
 def login(login_data: schemas.LoginRequest, db: Session = Depends(get_db)):
-    db_player = db.query(models.PlayerModel).filter(models.PlayerModel.name == login_data.username).first()
+    db_player = db.query(models.PlayerModel).filter(models.PlayerModel.username == login_data.username).first()
     if not db_player:
         raise HTTPException(status_code=401, detail="Nom d'usuari")
                                                                                     #! Change message to make them ambiguous
     if not auth.verify_password(login_data.password, db_player.hashed_password):
         raise HTTPException(status_code=401, detail="contrasenya incorrectes")
     
-    access_token = auth.create_access_token(data={"id": db_player.id, "user": db_player.name, "role": db_player.role.value, "is_admin": db_player.is_admin})
+    access_token = auth.create_access_token(data={"id": db_player.id, "user": db_player.username, "role": db_player.role.value, "is_admin": db_player.is_admin})
 
     return {
         "access_token": access_token,
@@ -197,5 +202,6 @@ def login(login_data: schemas.LoginRequest, db: Session = Depends(get_db)):
         "role": db_player.role.value,
         "is_admin": db_player.is_admin,
         "player_id": db_player.id,
-        "player_name": db_player.name
+        "player_username": db_player.username,  
+        "prefered_name": db_player.prefered_name
     }

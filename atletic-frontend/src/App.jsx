@@ -15,7 +15,7 @@ function App() {
   const [selectedDayStr, setSelectedDayStr] = useState(new Date().toISOString().split('T')[0]);
 
   const [isLoggedIn, setIsLoggedIn] = useState(() => {return !!localStorage.getItem('token')});
-  const [userName, setUserName] = useState(() => {return localStorage.getItem('username') || ''});
+  const [preferedName, setPreferedName] = useState(() => {return localStorage.getItem('prefered_name') || ''});
 /*
   const [loading, setLoading] = useState(true);
 
@@ -43,13 +43,13 @@ function App() {
 
   const handleLoginSuccess = () => {
     setIsLoggedIn(true);
-    setUserName(localStorage.getItem('username') || 'User');
+    setPreferedName(localStorage.getItem('prefered_name') || '');
   };
 
   const handleLogout = () => {
     localStorage.clear();
     setIsLoggedIn(false);
-    setUserName('');
+    setPreferedName('');
     setEvents([]);
   };
 
@@ -163,17 +163,17 @@ function App() {
 
   //* MAIN RENDER
   return (
-    <div style={{fontFamily: 'Arial, sans-serif', maxWidth: '500px', margin: '0 auto', padding: '20px', background: 'var(--bg)', minHeight: '100vh'}}>
+    <div style={{fontFamily: 'Arial, sans-serif', maxWidth: '500px', margin: '0 auto', padding: '20px', background: 'var(--bg)', minHeight: '100vh', boxSizing: 'border-box'}}>
       
       {/* Barra superior de l'usuari connectat */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', background: 'var(--code-bg)', padding: '10px 20px', borderRadius: '8px' }}>
         <div>
           <span style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--accent)' }}>🏐 Atlètic Poblenou</span>
-          <span style={{ marginLeft: '15px', color: 'var(--text)' }}>Hola, <strong>{userName}</strong>!</span>
+          <span style={{ marginLeft: '15px', color: 'var(--text)', fontSize: '14px' }}>Hola, <strong>{preferedName}</strong>!</span>
         </div>
         <button 
           onClick={handleLogout}
-          style={{ background: 'var(--border)', color: 'var(--text)', border: 'none', padding: '8px 15px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+          style={{ background: 'var(--border)', color: 'var(--text)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
         >
           Tancar sessió
         </button>

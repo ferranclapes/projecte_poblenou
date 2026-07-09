@@ -2,6 +2,9 @@ import { useState } from 'react';
 import axios from 'axios';
 
 function LoginForm({ onLoginSuccess }) {
+    const [name, setName] = useState('');
+    const [surname1, setSurname1] = useState('');
+    const [surname2, setSurname2] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
@@ -9,6 +12,8 @@ function LoginForm({ onLoginSuccess }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         setErrorMessage('');
+
+        setUsername(`${name.toLowerCase()}_${surname1.toLowerCase()}_${surname2.toLowerCase()}`);
 
         axios.post('http://127.0.0.1:8000/auth/login/', { username, password })
         .then(response => {
@@ -18,7 +23,8 @@ function LoginForm({ onLoginSuccess }) {
             localStorage.setItem('role', data.role);
             localStorage.setItem('is_admin', data.is_admin);
             localStorage.setItem('user_id', data.player_id);
-            localStorage.setItem('username', data.player_name);
+            localStorage.setItem('username', data.player_username);
+            localStorage.setItem('prefered_name', data.prefered_name);
 
             onLoginSuccess();
         })
@@ -47,13 +53,37 @@ function LoginForm({ onLoginSuccess }) {
                 )}
 
                 <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px', color: 'var(--text)' }}>Correu Electrònic</label>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px', color: 'var(--text)' }}>Nom</label>
                     <input 
-                        type="Username" 
+                        type="name" 
                         required
                         placeholder="Ex: Ferran" 
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', boxSizing: 'border-box' }}
+                    />
+                </div>
+
+                <div>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px', color: 'var(--text)' }}>1r Cognom</label>
+                    <input 
+                        type="surname1" 
+                        required
+                        placeholder="Ex: Clapés" 
+                        value={surname1}
+                        onChange={(e) => setSurname1(e.target.value)}
+                        style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', boxSizing: 'border-box' }}
+                    />
+                </div>
+
+                <div>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '13px', color: 'var(--text)' }}>2n Cognom</label>
+                    <input 
+                        type="surname2" 
+                        required
+                        placeholder="Ex: Costa" 
+                        value={surname2}
+                        onChange={(e) => setSurname2(e.target.value)}
                         style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', boxSizing: 'border-box' }}
                     />
                 </div>

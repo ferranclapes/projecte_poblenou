@@ -6,7 +6,7 @@ function EventSummary({ eventId, onBack }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`http://127.0.0.1:8000/events/${eventId}/summary`)
+    axios.get(`http://127.0.0.1:8000/events/${eventId}/summary/`)
       .then(res => {
         setSummary(res.data);
         setLoading(false);

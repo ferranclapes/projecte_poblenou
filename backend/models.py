@@ -8,9 +8,15 @@ class UserRoleEnum(str, Enum):
     PLAYER = "jugador"
     COACH = "entrenador"
 
-class GenderEnum(str, Enum):
+class SexEnum(str, Enum):
     MALE = "Masculí"
     FEMALE = "Femení"
+
+class PronounsEnum(str, Enum):
+    HE_HIM = "Ell"
+    SHE_HER = "Ella"
+    THEY_THEM = "Ells/Elles"
+    OTHER = "Altres"
 
 class PositionEnum(str, Enum):
     SETTER = "Col·locador"
@@ -32,11 +38,21 @@ class PlayerModel(Base):
     __tablename__ = "players"
     
     id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True, nullable=False)
+
+    # Personal information
     name = Column(String, nullable=False)
-    gender = Column(SQLEnum(GenderEnum), nullable=False)
+    surname1 = Column(String, nullable=False)
+    surname2 = Column(String, nullable=True)
+    prefered_name = Column(String, nullable=True)
+    pronouns = Column(SQLEnum(PronounsEnum), nullable=True)
+
+    # Volleyball-specific attributes
+    sex = Column(SQLEnum(SexEnum), nullable=False)
     main_position = Column(SQLEnum(PositionEnum), nullable=False)
     secondary_position = Column(SQLEnum(PositionEnum), nullable=True)
 
+    # User role and admin status
     role = Column(SQLEnum(UserRoleEnum), default=UserRoleEnum.PLAYER, nullable=False)
     is_admin = Column(Boolean, default=False)
 
