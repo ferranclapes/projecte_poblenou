@@ -9,13 +9,13 @@ class UserRoleEnum(str, Enum):
     COACH = "entrenador"
 
 class SexEnum(str, Enum):
-    MALE = "Masculí"
-    FEMALE = "Femení"
+    MALE = "Home"
+    FEMALE = "Dona"
 
 class PronounsEnum(str, Enum):
     HE_HIM = "Ell"
     SHE_HER = "Ella"
-    THEY_THEM = "Ells/Elles"
+    THEY_THEM = "Elle"
     OTHER = "Altres"
 
 class PositionEnum(str, Enum):
@@ -23,7 +23,7 @@ class PositionEnum(str, Enum):
     MIDDLE = "Central"
     OUTSIDE = "Punta"
     OPPOSITE = "Oposat"
-    LIBERO = "Libero"
+    LIBERO = "Líbero"
 
 class EventTypeEnum(str, Enum):
     MATCH = "Partit"

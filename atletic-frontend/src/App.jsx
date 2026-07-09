@@ -4,6 +4,7 @@ import axios from 'axios';
 import EventSummary from './components/EventSummary';
 import EventForm from './components/EventForm';
 import LoginForm from './components/LoginForm';
+import RegisterForm from './components/RegisterForm';
 
 function App() {
   const [events, setEvents] = useState([]);
@@ -15,31 +16,9 @@ function App() {
   const [selectedDayStr, setSelectedDayStr] = useState(new Date().toISOString().split('T')[0]);
 
   const [isLoggedIn, setIsLoggedIn] = useState(() => {return !!localStorage.getItem('token')});
-  const [preferedName, setPreferedName] = useState(() => {return localStorage.getItem('prefered_name') || ''});
-/*
-  const [loading, setLoading] = useState(true);
+  const [isRegistering, setIsRegistering] = useState(false);
 
-  // Fetch the events and players data from the API
-  const fetchdata = () => {
-    Promise.all([
-      axios.get('http://127.0.0.1:8000/events/'),
-      axios.get('http://127.0.0.1:8000/players/')
-    ])
-    .then(([eventsRes, playersRes]) => {
-      setEvents(eventsRes.data);
-      setPlayers(playersRes.data);
-      
-      if (playersRes.data.length > 0 && !selectedPlayer) {
-        setSelectedPlayer(playersRes.data[0].id);
-      }
-      setLoading(false);
-    })
-    .catch(error => {
-      console.error('Error fetching data from the API:', error);
-      setLoading(false);
-    });
-  };
-  */
+  const [preferedName, setPreferedName] = useState(() => {return localStorage.getItem('prefered_name') || ''});
 
   const handleLoginSuccess = () => {
     setIsLoggedIn(true);
@@ -151,7 +130,12 @@ function App() {
 
   //* SHOW LOGGIN SCREEN IF NOT LOGGED IN
   if (!isLoggedIn) {
-    return <LoginForm onLoginSuccess={handleLoginSuccess} />;
+    if (isRegistering) {
+      return (
+        <RegisterForm onCancel={() => setIsRegistering(false)} onRegisterSuccess={() => setIsRegistering(false)} />
+      );
+    }
+    return <LoginForm onLoginSuccess={handleLoginSuccess} onGoToRegister={() => setIsRegistering(true)} />;
   }
 
   //* SHOW EVENT SUMMARY IF AN EVENT IS SELECTED

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 
-function LoginForm({ onLoginSuccess }) {
+function LoginForm({ onLoginSuccess, onGoToRegister }) {
     const [name, setName] = useState('');
     const [surname1, setSurname1] = useState('');
     const [surname2, setSurname2] = useState('');
@@ -103,6 +103,17 @@ function LoginForm({ onLoginSuccess }) {
                 <button type="submit" style={{ background: 'var(--accent)', color: 'white', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', marginTop: '10px' }}>
                 Entrar a l'App
                 </button>
+
+                <div style={{ textAlign: 'center', marginTop: '10px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
+                    <span style={{ fontSize: '13px', color: '#666' }}>Ets nou a l'equip? </span>
+                    <button 
+                        type="button" 
+                        onClick={onGoToRegister} // 👈 Avisa al pare que obri el registre
+                        style={{ background: 'none', border: 'none', color: '#0070f3', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px', textDecoration: 'underline', padding: 0 }}
+                    >
+                        Crea un compte
+                    </button>
+                </div>
             </form>
         </div>
     );

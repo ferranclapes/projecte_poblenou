@@ -43,15 +43,19 @@ def create_player(player: schemas.CreatePlayer, db: Session = Depends(get_db)):
 
     db_player = models.PlayerModel(
         username=f"{player.name.lower()}_{player.surname1.lower()}_{player.surname2.lower()}",
+
         name=player.name,
         surname1=player.surname1,
         surname2=player.surname2,
         prefered_name=player.prefered_name,
         pronouns=player.pronouns,
+
         sex=player.sex,
         main_position=player.main_position,
         secondary_position=player.secondary_position,
+
         role = player.role,
+
         hashed_password=hashed_password,
         is_admin = True if player.role == models.UserRoleEnum.COACH else False
     )
@@ -155,7 +159,7 @@ def get_event_summary(event_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Event not found")
     
     total_confirmed = 0
-    gender_balance = {models.SexEnum.MALE: 0, models.SexEnum.FEMALE: 0}
+    sex_balance = {models.SexEnum.MALE: 0, models.SexEnum.FEMALE: 0}
     position_balance = {
         models.PositionEnum.SETTER: 0,
         models.PositionEnum.MIDDLE: 0,
@@ -173,14 +177,14 @@ def get_event_summary(event_id: int, db: Session = Depends(get_db)):
 
         player = db.query(models.PlayerModel).filter(models.PlayerModel.id == assistance.player_id).first()
         if player:
-            gender_balance[player.gender] += 1
+            sex_balance[player.sex] += 1
             position_balance[player.main_position] += 1
     
     return {
         "event_id": event_id,
         "event_name": event.name,
         "total_confirmed": total_confirmed,
-        "gender_balance": gender_balance,
+        "sex_balance": sex_balance,
         "position_balance": position_balance
     }
 

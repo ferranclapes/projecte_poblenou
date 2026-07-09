@@ -30,7 +30,7 @@ function EventSummary({ eventId, onBack }) {
       </button>
 
       <header style={{ background: 'var(--accent)', color: 'white', padding: '15px', borderRadius: '10px', textAlign: 'center', marginBottom: '20px' }}>
-        <h1 style={{ margin: 0, fontSize: '20px' }}>📊 Estat de la Convocatòria</h1>
+        <h1 style={{color: 'black', margin: 0, fontSize: '20px' }}>📊 Estat de la Convocatòria</h1>
         <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>Confirmats totals: <strong>{summary.total_confirmed}</strong></p>
       </header>
 
@@ -38,8 +38,8 @@ function EventSummary({ eventId, onBack }) {
       <section style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', padding: '15px', marginBottom: '20px', boxShadow: 'var(--shadow)' }}>
         <h3 style={{ margin: '0 0 10px 0', fontSize: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '5px', color: 'var(--text-h)' }}>👫 Balanç Mixte</h3>
         <div style={{ display: 'flex', justifyContent: 'space-around', fontSize: '14px', color: 'var(--text)' }}>
-          <div>🔹 Nois: <strong>{summary.gender_balance["Masculí"]}</strong></div>
-          <div>🔸 Noies: <strong>{summary.gender_balance["Femení"]}</strong></div>
+          <div>🔹 Nois: <strong>{summary.sex_balance["Home"]}</strong></div>
+          <div>🔸 Noies: <strong>{summary.sex_balance["Dona"]}</strong></div>
         </div>
       </section>
 
