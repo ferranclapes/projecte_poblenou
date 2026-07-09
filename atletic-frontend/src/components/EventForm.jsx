@@ -28,6 +28,8 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
       return;
     }
 
+    const token = localStorage.getItem('token');
+
     const payload = {
       event_type: eventType,
       name: eventName || null,
@@ -35,8 +37,12 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
       location: eventLocation || null
     };
 
+    const config = {
+        headers: {Authorization: `Bearer ${token}`}
+    };
+
     if (editingEvent) {
-      axios.put(`http://127.0.0.1:8000/events/${editingEvent.id}`, payload)
+      axios.put(`http://127.0.0.1:8000/events/${editingEvent.id}`, payload, config)
         .then(() => {
           alert("✏️ Convocatòria actualitzada correctament!");
           resetForm();
@@ -44,7 +50,7 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
         })
         .catch(error => console.error("Error al editar:", error));
     } else {
-      axios.post('http://127.0.0.1:8000/events/', payload)
+      axios.post('http://127.0.0.1:8000/events/', payload, config)
         .then(() => {
           alert("🎉 Convocatòria creada correctament!");
           resetForm();
@@ -67,30 +73,30 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
       {!editingEvent && (
         <button 
           onClick={() => setShowForm(!showForm)} 
-          style={{ width: '100%', background: '#eaeaea', color: '#333', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}
+          style={{ width: '100%', background: 'var(--border)', color: 'var(--text)', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}
         >
           {showForm ? "🔼 Tancar Formulari" : "➕ Nova Convocatòria"}
         </button>
       )}
       
       {showForm && (
-        <form onSubmit={handleSaveEvent} style={{ background: '#fff', border: '1px solid #eee', borderRadius: '8px', padding: '15px', marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '10px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-          <h4 style={{ margin: 0, color: '#0070f3' }}>{editingEvent ? "✏️ Modificar Esdeveniment" : "🏐 Nova Convocatòria"}</h4>
+        <form onSubmit={handleSaveEvent} style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', padding: '15px', marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '10px', boxShadow: 'var(--shadow)' }}>
+          <h4 style={{ margin: 0, color: 'var(--accent)' }}>{editingEvent ? "✏️ Modificar Esdeveniment" : "🏐 Nova Convocatòria"}</h4>
           
-          <select value={eventType} onChange={(e) => setEventType(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px' }}>
+          <select value={eventType} onChange={(e) => setEventType(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }}>
             <option value="Entrenament">Entrenament</option>
             <option value="Partit">Partit</option>
           </select>
-          <input type="text" placeholder="Nom / Rival" value={eventName} onChange={(e) => setEventName(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
-          <input type="datetime-local" value={eventDateTime} onChange={(e) => setEventDateTime(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
-          <input type="text" placeholder="Lloc" value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
+          <input type="text" placeholder="Nom / Rival" value={eventName} onChange={(e) => setEventName(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border)', boxSizing: 'border-box', background: 'var(--bg)', color: 'var(--text)' }} />
+          <input type="datetime-local" value={eventDateTime} onChange={(e) => setEventDateTime(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border)', boxSizing: 'border-box', background: 'var(--bg)', color: 'var(--text)' }} />
+          <input type="text" placeholder="Lloc" value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border)', boxSizing: 'border-box', background: 'var(--bg)', color: 'var(--text)' }} />
           
           <div style={{ display: 'flex', gap: '10px' }}>
-            <button type="submit" style={{ flex: 1, background: '#0070f3', color: 'white', border: 'none', padding: '10px', borderRadius: '5px', fontWeight: 'bold', cursor: 'pointer' }}>
+            <button type="submit" style={{ flex: 1, background: 'var(--accent)', color: 'white', border: 'none', padding: '10px', borderRadius: '5px', fontWeight: 'bold', cursor: 'pointer' }}>
               {editingEvent ? "💾 Desar Canvis" : "Publicar"}
             </button>
             {editingEvent && (
-              <button type="button" onClick={resetForm} style={{ background: '#ccc', color: '#333', border: 'none', padding: '10px', borderRadius: '5px', fontWeight: 'bold', cursor: 'pointer' }}>
+              <button type="button" onClick={resetForm} style={{ background: 'var(--border)', color: 'var(--text)', border: 'none', padding: '10px', borderRadius: '5px', fontWeight: 'bold', cursor: 'pointer' }}>
                 Cancelar
               </button>
             )}
