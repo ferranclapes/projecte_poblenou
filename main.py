@@ -68,6 +68,22 @@ def create_player(player: schemas.CreatePlayer, db: Session = Depends(get_db)):
 def list_players(db: Session = Depends(get_db)):
     return db.query(models.PlayerModel).all()
 
+@app.patch("/players/{player_id}/permissions/")
+def update_player_permissions(player_id: int, perms: schemas.PermissionsUpdate, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+    if current_user['is_admin'] != True:
+        raise HTTPException(status_code=403, detail="Només els administradors poden actualitzar permisos.")
+    
+    db_player = db.query(models.PlayerModel).filter(models.PlayerModel.id == player_id).first()
+    if not db_player:
+        raise HTTPException(status_code=404, detail="Player not found")
+    
+    db_player.role = perms.role
+    db_player.is_admin = perms.is_admin
+
+    db.commit()
+    db.refresh(db_player)
+    return {"status": "success", "message": f"Player {player_id} permissions updated successfully."}
+
 # --- 2. EVENT ---
 @app.post("/events/", response_model=schemas.EventResponse, status_code=201)
 def create_event(event: schemas.CreateEvent, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):

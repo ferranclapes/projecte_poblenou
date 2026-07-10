@@ -5,6 +5,7 @@ import EventSummary from './components/EventSummary';
 import EventForm from './components/EventForm';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
+import TeamSummary from './components/TeamSummary';
 
 function App() {
   const [events, setEvents] = useState([]);
@@ -17,6 +18,7 @@ function App() {
 
   const [isLoggedIn, setIsLoggedIn] = useState(() => {return !!localStorage.getItem('token')});
   const [isRegistering, setIsRegistering] = useState(false);
+  const [isTeamSummaryVisible, setIsTeamSummaryVisible] = useState(false);
 
   const [preferedName, setPreferedName] = useState(() => {return localStorage.getItem('prefered_name') || ''});
 
@@ -138,6 +140,11 @@ function App() {
     return <LoginForm onLoginSuccess={handleLoginSuccess} onGoToRegister={() => setIsRegistering(true)} />;
   }
 
+  //* SHOW TEAM SUMMARY IF USER WANTS TO SEE IT
+  if (isTeamSummaryVisible) {
+    return ( <TeamSummary onBack={() => setIsTeamSummaryVisible(false)} />);
+  }
+
   //* SHOW EVENT SUMMARY IF AN EVENT IS SELECTED
   if (currentEventId !== null) {
     return (<EventSummary eventId={currentEventId} onBack={() => setCurrentEventId(null)}/>);
@@ -155,6 +162,13 @@ function App() {
           <span style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--accent)' }}>🏐 Atlètic Poblenou</span>
           <span style={{ marginLeft: '15px', color: 'var(--text)', fontSize: '14px' }}>Hola, <strong>{preferedName}</strong>!</span>
         </div>
+        <button
+          onClick={() => setIsTeamSummaryVisible(true)}
+          style={{ background: 'var(--accent)', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
+        >
+          ⚙️ Plantilla i Permisos
+        </button>
+        
         <button 
           onClick={handleLogout}
           style={{ background: 'var(--border)', color: 'var(--text)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}

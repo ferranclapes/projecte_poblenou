@@ -34,6 +34,10 @@ class PlayerResponse(PlayerBase):
     class Config:
         from_attributes = True
 
+class PermissionsUpdate(BaseModel):
+    role: models.UserRoleEnum
+    is_admin: bool
+
 class CreateEvent(BaseModel):
     event_type: str
     name: Optional[str] = None
