@@ -94,20 +94,12 @@ function App() {
 
   //* MAIN RENDER
   return (
-    /*
-            <button
-              onClick={() => setIsTeamSummaryVisible(true)}
-              style={{ background: 'var(--accent)', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
-            >
-              ⚙️ Plantilla i Permisos
-            </button>
-    */
 
     
 
     <div style={theme.background}>
 
-      {/* 🗂️ EL NOU SIDEBAR DESPLEGABLE */}
+      {/* Side Menu */}
       <SideMenu 
         isOpen={isMenuOpen} 
         onClose={() => setIsMenuOpen(false)}
@@ -116,21 +108,21 @@ function App() {
 
       <div style={theme.headers_container}>
         
-        {/* Barra superior de l'usuari connectat */}
+        {/* User Header */}
         <div style={theme.user_header}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px'}}>
               <img src={logo} alt="Logo" style={theme.logo} /> 
               <h1 style={theme.user_header_title}>Hola, {preferedName}!</h1>
           </div>
           <button 
-            onClick={() => setIsMenuOpen(true)}  //TODO: Canviar a una funció per obrir el menu d'opcions
+            onClick={() => setIsMenuOpen(true)}
             style={theme.menu_button}
           >
             ☰
           </button>
         </div>
 
-        {/* 2. CALENDARI HORITZONTAL SETMANAL */}
+        {/* Calendar */}
         <Calendar events={events} selectedDayStr={selectedDayStr} setSelectedDayStr={setSelectedDayStr}/>
       </div>
 

@@ -123,6 +123,34 @@ export const theme = {
         marginBottom: '15px',
     },
 
+    calendar_days_container: {
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(7, 1fr)',
+        gridTemplateRows: 'repeat(6, 40px)',
+        gap: '5px', 
+        textAlign: 'center',
+        transition: 'max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        overflow: 'hidden'
+    },
+
+    calendar_day: {
+        padding: '10px 5px', 
+        borderRadius: '8px', 
+        cursor: 'pointer',
+        position: 'relative',
+        transition: 'opacity 0.2 ease, background 0.2s, color 0.2s',
+    },
+
+    calendar_dot: {
+        position: 'absolute', 
+        bottom: '4px', 
+        left: '50%', 
+        transform: 'translateX(-50%)', 
+        width: '5px', 
+        height: '5px', 
+        borderRadius: '50%'
+    },
+
     /*==================================================
     =                       EVENT                      =
     ==================================================*/
