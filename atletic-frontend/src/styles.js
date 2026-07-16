@@ -48,6 +48,10 @@ export const theme = {
 
     },
 
+    /*==================================================
+    =                     SIDE MENU                    =
+    ==================================================*/
+
     menu_button: {
         background: 'none',
         color: 'white',
@@ -57,6 +61,59 @@ export const theme = {
         fontSize: '40px',
         padding: '0 0 10px 0'
     },
+
+    overlay: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'rgba(42, 15, 15, 0.4)',
+        backdropFilter: 'blur(2px)',
+        zIndex: 999,
+        transition: 'opacity 0.3s ease-in-out'
+    },
+
+    sideMenu_container: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '280px',
+        height: '100vh',
+        backgroundColor: '#000000',
+        boxShadow: '4px 0 25px -5px rgba(0, 0, 0, 0.15)',
+        zIndex: 1000,
+        display: 'flex',
+        flexDirection: 'column',
+        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    },
+
+    sideMenu_header: {
+        backgroundColor: '#ff3131',
+        padding: '20px 0 20px 5px'
+    },
+
+    sideMenu_title: {
+        margin: '0',
+        color: 'white',
+        textAlign: 'left',
+        fontSize: '30px'
+    },
+
+    sideMenu_button: {
+        background: '#000000',
+        color: 'white',
+        border: 'none',
+        borderBottom: '2px solid #525252',
+        padding: '15px 5px',
+        cursor: 'pointer',
+        textAlign: 'left',
+        fontSize: '16px',
+    },
+
+    /*==================================================
+    =                      CALENDAR                    =
+    ==================================================*/
 
     // Contenidor del calendari
     calendar_container: {

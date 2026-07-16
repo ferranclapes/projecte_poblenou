@@ -9,6 +9,7 @@ import RegisterForm from './components/RegisterForm';
 import TeamSummary from './components/TeamSummary';
 import EventCard from './components/EventCard';
 import Calendar from './components/Calendar';
+import SideMenu from './components/SideMenu';
 
 import logo from '../assets/logo-atletic.png';
 
@@ -28,7 +29,10 @@ function App() {
 
   const [preferedName, setPreferedName] = useState(() => {return localStorage.getItem('prefered_name') || ''});
 
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const handleLoginSuccess = () => {
+    setIsMenuOpen(false);
     setIsLoggedIn(true);
     setPreferedName(localStorage.getItem('prefered_name') || '');
   };
@@ -99,7 +103,17 @@ function App() {
             </button>
     */
 
+    
+
     <div style={theme.background}>
+
+      {/* 🗂️ EL NOU SIDEBAR DESPLEGABLE */}
+      <SideMenu 
+        isOpen={isMenuOpen} 
+        onClose={() => setIsMenuOpen(false)}
+        onLogout={handleLogout}
+      />
+
       <div style={theme.headers_container}>
         
         {/* Barra superior de l'usuari connectat */}
@@ -109,7 +123,7 @@ function App() {
               <h1 style={theme.user_header_title}>Hola, {preferedName}!</h1>
           </div>
           <button 
-            onClick={handleLogout}  //TODO: Canviar a una funció per obrir el menu d'opcions
+            onClick={() => setIsMenuOpen(true)}  //TODO: Canviar a una funció per obrir el menu d'opcions
             style={theme.menu_button}
           >
             ☰
