@@ -6,6 +6,14 @@ function Calendar ({events, selectedDayStr, setSelectedDayStr}) {
   const [viewIsMonth, setViewIsMonth] = useState(false);
   const today = new Date();
 
+  // Funció auxiliar per formatar qualsevol objecte Date a format local YYYY-MM-DD
+  const formatDateLocal = (d) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const getMonday = (baseDate) => {
     const current = new Date(baseDate);
     const day = current.getDay();
@@ -60,13 +68,16 @@ function Calendar ({events, selectedDayStr, setSelectedDayStr}) {
     setCurrentDate(newDate);
   };
 
-  
   //* Check if a given date has any events
   const dayHasEvents = (dateStr) => {
     return events.some(event => event.date_time.split('T')[0] === dateStr);
   };
 
-  
+  const backToToday = () =>{
+    setCurrentDate(today);
+    setSelectedDayStr(formatDateLocal(today));
+  }
+
   const weekDays = getWeekDays(currentDate);
   const monthDays = getMonthDays(currentDate);
 
@@ -76,6 +87,8 @@ function Calendar ({events, selectedDayStr, setSelectedDayStr}) {
   const numRows = Math.ceil(monthDays.length / 7);
   const calculatedMaxHeight = viewIsMonth ? `${(numRows * 40) + (numRows * 4)}px` : '40px';
 
+  const todayStr = formatDateLocal(today);
+
   return (
     <div style={{...theme.calendar_container, transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', overflow: 'hidden'}}>
       
@@ -83,11 +96,14 @@ function Calendar ({events, selectedDayStr, setSelectedDayStr}) {
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <button onClick={() => handleNavigate(-1)} style={{ background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer', padding: '5px', color: 'var(--text)' }}>⬅️</button>
         <span 
-          onClick={() => setViewIsMonth(!viewIsMonth)} // 💡 Un clic al títol alterna la vista!
+          onClick={() => setViewIsMonth(!viewIsMonth)} 
           style={{ fontWeight: 'bold', fontSize: '14px', color: 'var(--text-h)', textTransform: 'capitalize', cursor: 'pointer', userSelect: 'none' }}
         >
           {titleDate.toLocaleDateString('ca-ES', { month: 'long', year: 'numeric' })} {viewIsMonth ? '▲' : '▼'}
         </span>
+        <button onClick={() => backToToday()} style={{...theme.today_button, opacity: selectedDayStr === todayStr ? 0 : 1}}>
+          Avui
+        </button>
         <button onClick={() => handleNavigate(1)} style={{ background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer', padding: '5px' }}>➡️</button>
     </div>
 
@@ -103,14 +119,14 @@ function Calendar ({events, selectedDayStr, setSelectedDayStr}) {
     {/* Display Days */}
     <div style={{...theme.calendar_days_container, maxHeight: calculatedMaxHeight}}>
         {displayedDays.map((date, index) => {
-          const dateStr = date.toISOString().split('T')[0];
+          // 🚀 APLICAT AQUÍ: Generació de la clau en format local segur
+          const dateStr = formatDateLocal(date);
+          
           const isSelected = dateStr === selectedDayStr;
           const hasEvent = dayHasEvents(dateStr);
           const diaNum = date.getDate();
 
-          // Comprovem si el dia pertany al mes en curs (per enfosquir els dels mesos passats/futurs)
           const isCurrentMonth = date.getMonth() === currentDate.getMonth();
-
           const isRowVisible = viewIsMonth || index < 7;
 
         return (
@@ -119,7 +135,7 @@ function Calendar ({events, selectedDayStr, setSelectedDayStr}) {
               onClick={() => setSelectedDayStr(dateStr)} 
               style={{ ...theme.calendar_day,
                 border: date.getDate() === today.getDate() && date.getMonth() === today.getMonth() ? '1px solid #000000':'none',
-                background: isSelected ? 'var(--accent)' : 'transparent', 
+                background: isSelected ? '#ff3131' : 'transparent', 
                 color: isSelected ? '#ffffff' : (isCurrentMonth ? '#000000' : (!viewIsMonth ? 'var(--text)' : 'rgba(120,120,120,0.4)')),
                 fontWeight: isSelected ? 'bold' : 'normal',
                 opacity: isRowVisible ? 1 : 0

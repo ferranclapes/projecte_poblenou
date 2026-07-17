@@ -123,6 +123,17 @@ export const theme = {
         marginBottom: '15px',
     },
 
+    today_button: {
+        background: '#ff3131',
+        color: 'white',
+        border: 'none',
+        borderRadius: '6px',
+        padding: '5px 10px',
+        cursor: 'pointer',
+        fontSize: '14px',
+        fontWeight: 'bold'
+    },
+
     calendar_days_container: {
         display: 'grid', 
         gridTemplateColumns: 'repeat(7, 1fr)',
