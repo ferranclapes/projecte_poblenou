@@ -85,7 +85,7 @@ def update_player_permissions(player_id: int, perms: schemas.PermissionsUpdate, 
     return {"status": "success", "message": f"Player {player_id} permissions updated successfully."}
 
 # --- 2. EVENT ---
-@app.post("/events/", response_model=schemas.EventResponse, status_code=201)
+@app.post("/events", response_model=schemas.EventResponse, status_code=201)
 def create_event(event: schemas.CreateEvent, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
     if current_user['is_admin'] != True:
         raise HTTPException(status_code=403, detail="Només els entrenadors o administradors poden crear esdeveniments.")
@@ -94,7 +94,8 @@ def create_event(event: schemas.CreateEvent, db: Session = Depends(get_db), curr
         event_type=event.event_type,
         name=event.name,
         date_time=event.date_time,
-        location=event.location
+        location=event.location,
+        description=event.description
     )
     db.add(db_event)
     db.commit()
@@ -106,7 +107,7 @@ def list_events(db: Session = Depends(get_db)):
     db_events = db.query(models.EventModel).all()    
     return db_events
 
-@app.put("/events/{event_id}/")
+@app.put("/events/{event_id}")
 def update_event(event_id: int, event_data: schemas.CreateEvent, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
     if current_user['is_admin'] != True and current_user['role'] != models.UserRoleEnum.COACH:
         raise HTTPException(status_code=403, detail="Només els entrenadors o administradors poden actualitzar esdeveniments.")
@@ -119,6 +120,7 @@ def update_event(event_id: int, event_data: schemas.CreateEvent, db: Session = D
     db_event.name = event_data.name
     db_event.date_time = event_data.date_time
     db_event.location = event_data.location
+    db_event.description = event_data.description
 
     db.commit()
     db.refresh(db_event)

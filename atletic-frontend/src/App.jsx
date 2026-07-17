@@ -22,7 +22,6 @@ function App() {
   
   const [editingEvent, setEditingEvent] = useState(null);
 
-
   const [isLoggedIn, setIsLoggedIn] = useState(() => {return !!localStorage.getItem('token')});
   const [isRegistering, setIsRegistering] = useState(false);
   const [isTeamSummaryVisible, setIsTeamSummaryVisible] = useState(false);
@@ -30,6 +29,7 @@ function App() {
   const [preferedName, setPreferedName] = useState(() => {return localStorage.getItem('prefered_name') || ''});
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isFormVisible, setIsFormVisible] = useState(false);
 
   const handleLoginSuccess = () => {
     setIsMenuOpen(false);
@@ -129,18 +129,17 @@ function App() {
       
       {/* 3. COMPONENT FORMULARI (Invocat de forma neta i modular) 📦 */}
       {localStorage.getItem('is_admin') === 'true' && (
-      <EventForm 
-        key={editingEvent ? `edit-${editingEvent.id}` : 'nou-event'}
-        onEventCreated={fetchEvents} 
-        editingEvent={editingEvent} 
-        onCancelEdit={() => setEditingEvent(null)} 
-      />
-      )} 
+      <button onClick={() => setIsFormVisible(true)} style={theme.btnPrimary}>➕ Nova Convocatòria</button>
+      )}
       
-      {/* 4. LLISTAT D'EVENTS */}
-      {/*<h2 style={{ fontSize: '16px', color: 'var(--text-h)', marginBottom: '12px' }}>
-        Esdeveniments del dia {new Date(selectedDayStr).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' })}
-      </h2>*/}
+      {localStorage.getItem('is_admin') === 'true' && (isFormVisible || editingEvent) && (
+        <EventForm
+          key={editingEvent ? editingEvent.id : 'new'}
+          onEventCreated={() => {fetchEvents(); setIsFormVisible(false); setEditingEvent(null);}}
+          editingEvent={editingEvent}
+          onCancelEdit={() =>{setIsFormVisible(false); setEditingEvent(null);}}
+          />
+      )}
       
       {filteredEvents.length === 0 && (
         <p style={theme.event_container}>

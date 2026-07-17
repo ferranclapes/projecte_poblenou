@@ -102,7 +102,7 @@ function Calendar ({events, selectedDayStr, setSelectedDayStr}) {
           {titleDate.toLocaleDateString('ca-ES', { month: 'long', year: 'numeric' })} {viewIsMonth ? '▲' : '▼'}
         </span>
         <button onClick={() => backToToday()} style={{...theme.today_button, opacity: selectedDayStr === todayStr ? 0 : 1}}>
-          Avui
+          Tornar a avui
         </button>
         <button onClick={() => handleNavigate(1)} style={{ background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer', padding: '5px' }}>➡️</button>
     </div>

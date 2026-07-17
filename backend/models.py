@@ -68,6 +68,7 @@ class EventModel(Base):
     name = Column(String, nullable=True)
     date_time = Column(DateTime, nullable=False)
     location = Column(String, nullable=True)
+    description = Column(String, nullable=True)
     
     assistances = relationship("AssistanceModel", back_populates="event")
 

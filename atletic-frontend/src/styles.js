@@ -253,5 +253,96 @@ export const theme = {
         cursor: 'pointer',
         fontWeight: 'bold',
         fontSize: '12px' 
+    },
+
+    /*==================================================
+    =                       FORMS                      =
+    ==================================================*/
+    form_overlay: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'rgba(42, 15, 15, 0.4)',
+        backdropFilter: 'blur(2px)',
+        zIndex: 999,
+        transition: 'opacity 0.3s ease-in-out',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: '20px',
+        boxSizing: 'border-box'
+    },
+
+    form_container: {
+        background: '#ffffff',
+        borderRadius: '15px',
+        padding: '20px',
+        width: '100%',
+        boxSizing: 'border-box',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        position: 'relative',
+    },
+
+    form_title: {
+        margin: '0 0 15px 0',
+        fontSize: '20px',
+        fontWeight: 'bold',
+        color: '#ff3131'
+    },
+
+    form_content: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+        marginTop: '10px'
+    },
+
+    form_button_container: {
+        display: 'flex',
+        gap: '10px',
+        justifyContent: "flex-end",
+        marginTop: '10px'
+    },
+
+    /*==================================================
+    =                      USEFUL                      =
+    ==================================================*/
+
+    infoLabel: {
+        fontSize: '14px'
+    },
+
+    inputField: {
+        width: '100%',
+        padding: '8px',
+        borderRadius: '4px',
+        border: '1px solid #8c8c8c',
+        boxSizing: 'border-box',
+        fontSize: '13px'
+    },
+
+    btnPrimary: {
+        background: '#ff3131',
+        color: 'white',
+        border: 'none',
+        padding: '10px 10px',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontSize: '12px',
+        fontWeight: 'bold'
+    },
+
+    btnSecondary: {
+        background: '#8c8c8c',
+        color: 'white',
+        border: 'none',
+        padding: '10px 10px',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontSize: '12px',
+        fontWeight: 'bold'
     }
+
 }

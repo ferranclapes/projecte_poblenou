@@ -43,6 +43,7 @@ class CreateEvent(BaseModel):
     name: Optional[str] = None
     date_time: datetime
     location: Optional[str] = None
+    description: Optional[str] = None
 
 class EventResponse(CreateEvent):
     id: int

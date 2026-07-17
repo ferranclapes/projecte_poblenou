@@ -70,7 +70,7 @@ function EventCard({event, onClickEvent, onEdit, onRefreshEvents}) {
             <p style={theme.event_info_box}>📍{event.location || "Per determinar"}</p>
           </div>
 
-          <p style={theme.event_description_text}> Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer tortor arcu, viverra nec augue eu, consequat vulputate enim. Nam volutpat nisl id commodo vehicula. Donec placerat enim eu lacus mollis viverra. Curabitur vel rutrum nisi. Fusce et felis aliquam, commodo magna nec, sollicitudin augue.</p>
+          <p style={theme.event_description_text}>{event.description}</p>
           
           
           
