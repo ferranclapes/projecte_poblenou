@@ -1,0 +1,10 @@
+Generic single-database configuration.
+
+COM ACTUALITZAR LA DATABASE:
+1- Modificar el fitxer a backend.models.py
+
+2- Generar la migració automàtica utlitzant aquest comandament:
+    alembic revision --autogenerate -m "descripció de què s'ha fet"
+
+3- Aplicar el canvi a la DB en viu:
+    alembic upgrade head

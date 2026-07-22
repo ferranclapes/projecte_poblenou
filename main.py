@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
 from typing import List
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from backend.database import engine, Base, get_db
@@ -50,6 +51,8 @@ def create_player(player: schemas.CreatePlayer, db: Session = Depends(get_db)):
         prefered_name=player.prefered_name,
         pronouns=player.pronouns,
 
+        club=player.club,
+        team=player.team,
         sex=player.sex,
         main_position=player.main_position,
         secondary_position=player.secondary_position,
@@ -83,6 +86,22 @@ def update_player_permissions(player_id: int, perms: schemas.PermissionsUpdate, 
     db.commit()
     db.refresh(db_player)
     return {"status": "success", "message": f"Player {player_id} permissions updated successfully."}
+
+@app.post("players/{player_id}/teams/{team_id}")
+def assign_player_to_team(player_id: int, team_id: int, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+    if current_user["is_admin"] != True:
+        raise HTTPException(status_code=403, detail="Només els administradors poden assignar jugadors a equips.")
+    
+    check_query = text("SELECT * FROM player_teams WHERE player_id = :p_id AND team_id = :t_id")
+    existing = db.execute(check_query, {"p_id": player_id, "t_id": team_id}).fetchone()
+    if existing:
+        return {"status": "info", "message": f"El jugador {player_id} ja està assignat a l'equip {team_id}."}
+    
+    insert_query = text("INSERT INTO player_teams (player_id, team_id) VALUES (:p_id, :t_id)")
+    db.execute(insert_query, {"p_id": player_id, "t_id": team_id})
+    db.commit()
+
+    return {"status": "success", "message": f"Jugador {player_id} assignat a l'equip {team_id} correctament."}
 
 # --- 2. EVENT ---
 @app.post("/events", response_model=schemas.EventResponse, status_code=201)
@@ -126,7 +145,7 @@ def update_event(event_id: int, event_data: schemas.CreateEvent, db: Session = D
     db.refresh(db_event)
     return db_event
 
-@app.delete("/events/{event_id}/")
+@app.delete("/events/{event_id}")
 def delete_event(event_id: int, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
     if current_user['is_admin'] != True and current_user['role'] != models.UserRoleEnum.COACH:
         raise HTTPException(status_code=403, detail="Només els entrenadors o administradors poden eliminar esdeveniments.")
@@ -138,6 +157,23 @@ def delete_event(event_id: int, db: Session = Depends(get_db), current_user: dic
     db.delete(event)
     db.commit()
     return {"status": "success", "message": f"Event {event_id} deleted successfully"}
+
+@app.post("/events/{event_id}/teams/{team_id}")
+def assign_event_to_team(event_id: int, team_id: int, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+    if current_user["is_admin"] != True and current_user['role'] != models.UserRoleEnum.COACH:
+        raise HTTPException(status_code=403, detail="Només els entrenadors o administradors poden assignar esdeveniments a equips.")
+    
+    check_query = text("SELECT * FROM event_teams WHERE event_id = :e_id AND team_id = :t_id")
+    existing = db.execute(check_query, {"e_id": event_id, "t_id": team_id}).fetchone()
+    if existing:
+        return {"status": "info", "message": f"L'esdeveniment {event_id} ja està assignat a l'equip {team_id}."}
+    
+    insert_query = text("INSERT INTO event_teams (event_id, team_id) VALUES (:e_id, :t_id)")
+    db.execute(insert_query, {"e_id": event_id, "t_id": team_id})
+    db.commit()
+
+    return {"status": "success", "message": f"Esdeveniment {event_id} assignat a l'equip {team_id} correctament."}
+
 
 # --- 3. ASSISTANCE ---
 @app.post("/events/{event_id}/assistances/")
@@ -227,3 +263,24 @@ def login(login_data: schemas.LoginRequest, db: Session = Depends(get_db)):
         "player_username": db_player.username,  
         "prefered_name": db_player.prefered_name
     }
+
+# --- 6. TEAMS ---
+@app.post("/teams", response_model=schemas.TeamResponse, status_code=201)
+def create_team(team: schemas.TeamBase, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+    if current_user['is_admin'] != True:
+        raise HTTPException(status_code=403, detail="Només els administradors poden crear equips.")
+
+    db_team = models.TeamModel(
+        name=team.name,
+        category=team.category
+    )
+    db.add(db_team)
+    db.commit()
+    db.refresh(db_team)
+    return db_team
+
+@app.get("/teams", response_model=List[schemas.TeamResponse], status_code=201)
+def list_teams(db: Session = Depends(get_db)):
+    query = text("SELECT * FROM teams ORDER BY name ASC")
+    result = db.execute(query)
+    return [dict(row._mapping) for row in result]

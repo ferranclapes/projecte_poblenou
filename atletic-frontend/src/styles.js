@@ -302,7 +302,7 @@ export const theme = {
     form_button_container: {
         display: 'flex',
         gap: '10px',
-        justifyContent: "flex-end",
+        justifyContent: "flex-start",
         marginTop: '10px'
     },
 

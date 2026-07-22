@@ -51,6 +51,25 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
     }
   }
 
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    if (window.confirm("⚠️ Segur que vols eliminar aquesta convocatòria? Es borraran totes les assistències.")) {
+      const token = localStorage.getItem('token');
+      axios.delete(`http://127.0.0.1:8000/events/${editingEvent.id}`, {
+        headers: {Authorization: `Bearer ${token}`}
+      })
+      .then(() => {
+        alert("🗑️ Convocatòria eliminada correctament!");
+        resetForm();
+        onEventCreated();
+      })
+      .catch(error => {
+        console.error("Error al eliminar la convocatòria:", error);
+        alert("Hi ha hagut un error al eliminar la convocatòria.");
+      });
+    }
+  }
+
   const resetForm = () => {
     setEventName('');
     setEventDateTime('');
@@ -93,8 +112,11 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
           </div>
 
           <div style={theme.form_button_container}>
-            <button type="button" onClick={onCancelEdit} style={theme.btnSecondary}>Cancel·lar</button>
             <button type="submit" style={theme.btnPrimary}>{editingEvent ? "Desar canvis" : "Crear convocatòria"}</button>
+            <button type="button" onClick={onCancelEdit} style={theme.btnSecondary}>Cancel·lar</button>
+            {editingEvent && (
+              <button type="button" onClick={handleDelete} style={theme.btnSecondary}>Eliminar</button>
+            )}
           </div>
         </form>
       </div>

@@ -129,7 +129,7 @@ function App() {
       
       {/* 3. COMPONENT FORMULARI (Invocat de forma neta i modular) 📦 */}
       {localStorage.getItem('is_admin') === 'true' && (
-      <button onClick={() => setIsFormVisible(true)} style={theme.btnPrimary}>➕ Nova Convocatòria</button>
+      <button onClick={() => setIsFormVisible(true)} style={{...theme.btnPrimary, marginBottom: '10px'}}>➕ Nova Convocatòria</button>
       )}
       
       {localStorage.getItem('is_admin') === 'true' && (isFormVisible || editingEvent) && (
