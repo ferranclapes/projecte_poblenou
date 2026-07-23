@@ -82,7 +82,22 @@ function App() {
 
   //* SHOW TEAM SUMMARY IF USER WANTS TO SEE IT
   if (isTeamSummaryVisible) {
-    return ( <TeamSummary onBack={() => setIsTeamSummaryVisible(false)} />);
+    return ( 
+    <div style={theme.background}>
+      <SideMenu 
+        isOpen={isMenuOpen} 
+        onClose={() => setIsMenuOpen(false)}
+        onLogout={handleLogout}
+        onViewMainPage={() => {setIsTeamSummaryVisible(false); setIsMenuOpen(false);}}
+        onViewTeamSummary={() => {setIsTeamSummaryVisible(true); setIsMenuOpen(false);}}
+      />
+
+      <TeamSummary 
+        logo={logo}
+        onOpenMenu={() => setIsMenuOpen(true)} 
+      />
+    </div>
+      );
   }
 
   //* SHOW EVENT SUMMARY IF AN EVENT IS SELECTED
@@ -104,6 +119,8 @@ function App() {
         isOpen={isMenuOpen} 
         onClose={() => setIsMenuOpen(false)}
         onLogout={handleLogout}
+        onViewMainPage={() => {setIsTeamSummaryVisible(false); setIsMenuOpen(false);}}
+        onViewTeamSummary={() => {setIsTeamSummaryVisible(true); setIsMenuOpen(false);}}
       />
 
       <div style={theme.headers_container}>

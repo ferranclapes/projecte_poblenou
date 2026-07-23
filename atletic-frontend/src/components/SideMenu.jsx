@@ -1,6 +1,6 @@
 import {theme} from '../styles.js';
 
-function SideMenu({ isOpen, onClose, onLogout }) {
+function SideMenu({ isOpen, onClose, onLogout, onViewMainPage, onViewTeamSummary }) {
   // Si no està obert, directament no dibuixem res a la pantalla (retornem null)
     const transformStyle = isOpen ? 'translateX(0)' : 'translateX(-290px)';
 
@@ -18,11 +18,11 @@ function SideMenu({ isOpen, onClose, onLogout }) {
 
         {/* El contingut està buit per ara */}
         <div style={{ padding: '10px 15px 0 15px', display: 'flex', flexDirection: 'column'}}>
-            <button style= {theme.sideMenu_button} onClick={onClose}>
-            Això és un botó
+            <button style= {theme.sideMenu_button} onClick={onViewMainPage}>
+            Pantalla principal
             </button>
-            <button style= {theme.sideMenu_button} onClick={onClose}>
-            Això és un botó
+            <button style= {theme.sideMenu_button} onClick={onViewTeamSummary}>
+            Resum d'Equip
             </button>
             <button style= {theme.sideMenu_button} onClick={onLogout}>
             Tancar sessió

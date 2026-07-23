@@ -13,13 +13,10 @@ export const theme = {
     =                    USER HEADER                   =
     ==================================================*/
 
-    // Contenidor de la capçalera i el calendari
     headers_container: {
         background: '#ffffff',
         borderRadius: '0 0 30px 30px' // Same as calendar_container for visual consistency
     },
-
-    // Capçalera de l'usuari
     user_header:{
         display: 'flex',
         justifyContent: 'space-between',
@@ -30,15 +27,11 @@ export const theme = {
         borderRadius: '0 0 15px 15px',
         boxSizing: 'border-box'
     },
-
-    // Escut de l'equip
     logo: {
         width: '50px',
         height: '50px',
         objectFit: 'cover'
     },
-
-    // Títol de la capçalera de l'usuari
     user_header_title: {
         margin: '0',
         color: 'white',
@@ -47,11 +40,6 @@ export const theme = {
         fontWeight: 'bold',
 
     },
-
-    /*==================================================
-    =                     SIDE MENU                    =
-    ==================================================*/
-
     menu_button: {
         background: 'none',
         color: 'white',
@@ -61,6 +49,10 @@ export const theme = {
         fontSize: '40px',
         padding: '0 0 10px 0'
     },
+
+    /*==================================================
+    =                     SIDE MENU                    =
+    ==================================================*/
 
     overlay: {
         position: 'fixed',
@@ -73,7 +65,6 @@ export const theme = {
         zIndex: 999,
         transition: 'opacity 0.3s ease-in-out'
     },
-
     sideMenu_container: {
         position: 'fixed',
         top: 0,
@@ -87,19 +78,16 @@ export const theme = {
         flexDirection: 'column',
         transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     },
-
     sideMenu_header: {
         backgroundColor: '#ff3131',
         padding: '20px 0 20px 5px'
     },
-
     sideMenu_title: {
         margin: '0',
         color: 'white',
         textAlign: 'left',
         fontSize: '30px'
     },
-
     sideMenu_button: {
         background: '#000000',
         color: 'white',
@@ -115,14 +103,12 @@ export const theme = {
     =                      CALENDAR                    =
     ==================================================*/
 
-    // Contenidor del calendari
     calendar_container: {
         background: '#ffffff',
         borderRadius: '0 0 30px 30px',
         padding: '10px 10px 20px',
         marginBottom: '15px',
     },
-
     today_button: {
         background: '#ff3131',
         color: 'white',
@@ -133,7 +119,6 @@ export const theme = {
         fontSize: '14px',
         fontWeight: 'bold'
     },
-
     calendar_days_container: {
         display: 'grid', 
         gridTemplateColumns: 'repeat(7, 1fr)',
@@ -143,7 +128,6 @@ export const theme = {
         transition: 'max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         overflow: 'hidden'
     },
-
     calendar_day: {
         padding: '10px 5px', 
         borderRadius: '8px', 
@@ -151,7 +135,6 @@ export const theme = {
         position: 'relative',
         transition: 'opacity 0.2 ease, background 0.2s, color 0.2s',
     },
-
     calendar_dot: {
         position: 'absolute', 
         bottom: '4px', 
@@ -166,14 +149,11 @@ export const theme = {
     =                       EVENT                      =
     ==================================================*/
 
-    // Contenidor de la llista d'esdeveniments
     event_list_container: {
         display: 'flex',
         flexDirection: 'column',
         gap: '15px' 
     },
-
-    // Contenidor de cada esdeveniment
     event_container: {
         background: '#ffffff',
         marginLeft: '20px',
@@ -181,8 +161,6 @@ export const theme = {
         padding: '30px 20px',
         borderRadius: '15px',
     },
-
-    // Etiqueta del tipus d'esdeveniment
     event_type_badge: {
         display: 'inline-flex',
         alignItems: 'center',
@@ -196,7 +174,6 @@ export const theme = {
         fontSize: '11px',
         fontWeight: 'bold',
     },
-
     edit_event_button: {
         display: 'inline-flex',
         alignItems: 'center',
@@ -211,14 +188,12 @@ export const theme = {
         fontSize: '13px',
         borderRadius: '6px',
     },
-
     event_name: {
         margin: '12px 0 6px 0',
         fontSize: '20px',
         color: 'var(--text-h)',
         textAlign: 'left',
     },
-
     event_info_box: {
         color: '#222222',
         fontSize: '14px',
@@ -226,7 +201,6 @@ export const theme = {
         padding: '3px 6px',
         borderRadius: '6px'
     },
-
     event_description_text: {
         color: '#222222',
         fontSize: '14px',
@@ -235,7 +209,6 @@ export const theme = {
         textAlign: 'left',
         lineHeight: '1.2'
     },
-
     event_assistance_button: {
         background: '#f85e5e',
         border: 'none',
@@ -245,7 +218,6 @@ export const theme = {
         fontWeight: 'bold',
         fontSize: '12px' 
     },
-
     event_check_assistance_button: {
         border: 'none',
         padding: '8px 4px',
@@ -274,7 +246,6 @@ export const theme = {
         padding: '20px',
         boxSizing: 'border-box'
     },
-
     form_container: {
         background: '#ffffff',
         borderRadius: '15px',
@@ -284,26 +255,102 @@ export const theme = {
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
         position: 'relative',
     },
-
     form_title: {
         margin: '0 0 15px 0',
         fontSize: '20px',
         fontWeight: 'bold',
         color: '#ff3131'
     },
-
     form_content: {
         display: 'flex',
         flexDirection: 'column',
         gap: '10px',
         marginTop: '10px'
     },
-
     form_button_container: {
         display: 'flex',
         gap: '10px',
         justifyContent: "flex-end",
         marginTop: '10px'
+    },
+
+    /*==================================================
+    =                   TEAM SUMMARY                   =
+    ==================================================*/
+
+    teamSummary_header: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        width: '100%',
+        background: '#ff3131',
+        padding: '5px 10px 0px 15px', //top, right, bottom, left
+        borderRadius: '0 0 15px 15px',
+        boxSizing: 'border-box',
+        marginBottom: '20px'
+    },
+    teamSummary_logo: {
+        width: '30px',
+        height: '30px',
+        objectFit: 'cover'
+    },
+    teamSummary_header_title: {
+        margin: '0',
+        color: 'white',
+        padding: '10px 0 15px 0',
+        fontSize: '25px',
+        fontWeight: 'bold',
+    },
+    teamSummary_menu_button: {
+        background: 'transparent',
+        border: 'none',
+        color: 'white',
+        fontSize: '25px',
+        cursor: 'pointer',
+    },
+    teamSummary_player_list_container: {
+        background: '#ffffff',
+        borderRadius: '10px 10px 10px 10px',
+        padding: '10px 10px 20px',
+        display: 'flex',
+        flexDirection: 'column'
+    },
+    teamSummary_player_continer: {
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-start',
+        alignItems: 'flex-start',
+        padding: '10px',
+        borderBottom: '1px solid #888888'
+    },
+    teamSummary_player_expand_button: {
+        background: 'transparent',
+        border: 'none',
+        color: '#000000',
+        fontSize: '14px',
+        cursor: 'pointer',
+        marginTop: '5px'
+    },
+    teamSummary_detail_container: {
+        padding: '12px 0px 0px 20px',
+        display: 'grid',
+        gap: '12px',
+        fontSize: '14px',
+        width: '90%',
+        overflow: 'hidden'
+    },
+    teamSummary_detail_row: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        width: '100%'
+    },
+    teamSummary_edit_detail_button: {
+        background: 'transparent',
+        border: 'none',
+        color: '#000000',
+        fontSize: '14px',
+        cursor: 'pointer'
     },
 
     /*==================================================
