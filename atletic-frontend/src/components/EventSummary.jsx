@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/';
 
 function EventSummary({ eventId, onBack }) {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`${API_URL}/events/${eventId}/summary/`)
+    axios.get(`${API_URL}events/${eventId}/summary/`)
       .then(res => {
         setSummary(res.data);
         setLoading(false);

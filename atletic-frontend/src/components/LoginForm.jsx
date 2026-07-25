@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/';
 
 function LoginForm({ onLoginSuccess, onGoToRegister }) {
     const [name, setName] = useState('');
@@ -16,7 +16,7 @@ function LoginForm({ onLoginSuccess, onGoToRegister }) {
 
         setUsername(`${name.toLowerCase()}_${surname1.toLowerCase()}_${surname2.toLowerCase()}`);
 
-        axios.post(`${API_URL}/auth/login/`, { username, password })
+        axios.post(`${API_URL}auth/login/`, { username, password })
         .then(response => {
             const data = response.data;
 

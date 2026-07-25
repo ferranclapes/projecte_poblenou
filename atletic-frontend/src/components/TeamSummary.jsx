@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/';
 import { theme } from '../styles.js';
 
 function TeamSummary({logo, onOpenMenu}) {
@@ -13,7 +13,7 @@ function TeamSummary({logo, onOpenMenu}) {
     };
 
     const fetchPlayers = () => {
-        axios.get(`${API_URL}/players/`)
+        axios.get(`${API_URL}players/`)
         .then(response => {
             setPlayers(response.data);
             setLoading(false);
