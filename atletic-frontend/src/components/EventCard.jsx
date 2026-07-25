@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 import {theme} from '../styles.js';
 
 function EventCard({event, onClickEvent, onEdit, onRefreshEvents}) {
@@ -10,7 +11,7 @@ function EventCard({event, onClickEvent, onEdit, onRefreshEvents}) {
     e.stopPropagation();
     if (window.confirm("⚠️ Segur que vols eliminar aquesta convocatòria? Es borraran totes les assistències.")) {
       const token = localStorage.getItem('token');
-      axios.delete(`http://127.0.0.1:8000/events/${event.id}`, {
+      axios.delete(`${API_URL}/events/${event.id}`, {
         headers: {Authorization: `Bearer ${token}`}
       })
       .then(() => {
@@ -39,7 +40,7 @@ function EventCard({event, onClickEvent, onEdit, onRefreshEvents}) {
       comment: ""
     };
 
-    axios.post(`http://127.0.0.1:8000/events/${event.id}/assistances/`, payload)
+    axios.post(`${API_URL}/events/${event.id}/assistances/`, payload)
     .then(() => {
       alert(`S'ha registrat la teva assistència: ${status}`);
       setAssistance(status);

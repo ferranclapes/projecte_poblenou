@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 import { theme } from '../styles.js';
 
 function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
@@ -33,7 +34,7 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
     }
 
     if (editingEvent) {
-      axios.put(`http://127.0.0.1:8000/events/${editingEvent.id}`, payload, config)
+      axios.put(`${API_URL}/events/${editingEvent.id}`, payload, config)
         .then(() => {
           alert("✏️ Convocatòria actualitzada correctament!");
           resetForm();
@@ -41,7 +42,7 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
         })
         .catch(error => console.error("Error al editar:", error));
     } else {
-      axios.post('http://127.0.0.1:8000/events', payload, config)
+      axios.post(`${API_URL}/events`, payload, config)
         .then(() => {
           alert("🎉 Convocatòria creada correctament!");
           resetForm();

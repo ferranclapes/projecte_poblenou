@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 import { theme } from '../styles.js';
 
 function TeamSummary({logo, onOpenMenu}) {
@@ -12,7 +13,7 @@ function TeamSummary({logo, onOpenMenu}) {
     };
 
     const fetchPlayers = () => {
-        axios.get('http://127.0.0.1:8000/players/')
+        axios.get(`${API_URL}/players/`)
         .then(response => {
             setPlayers(response.data);
             setLoading(false);
@@ -30,7 +31,7 @@ function TeamSummary({logo, onOpenMenu}) {
     const handlePermissionChange = (playerId, newRole, isAdmin) => {
         const token = localStorage.getItem('token');
 
-        axios.patch(`http://127.0.0.1:8000/players/${playerId}/permissions/`, {
+        axios.patch(`${API_URL}/players/${playerId}/permissions/`, {
             role: newRole,
             is_admin: isAdmin
         }, {
