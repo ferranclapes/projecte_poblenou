@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/';
 import {theme} from './styles.js';
 
 import EventSummary from './components/EventSummary';
@@ -47,7 +47,7 @@ function App() {
 
   const fetchEvents = useCallback(() => {
     const token = localStorage.getItem('token');
-    axios.get(`${API_URL}/events/`,{
+    axios.get(`${API_URL}events/`,{
       headers: {Authorization: `Bearer ${token}`}
     })
     .then(response => setEvents(response.data))
