@@ -39,7 +39,7 @@ function EventCard({event, onClickEvent, onEdit, onRefreshEvents}) {
       comment: ""
     };
 
-    axios.post(`http://127.0.0.1:8000/events/${event.id}/assistances/`, payload)
+    axios.post(`http://127.0.0.1:8000/events/${event.id}/assistances`, payload)
     .then(() => {
       alert(`S'ha registrat la teva assistència: ${status}`);
       setAssistance(status);

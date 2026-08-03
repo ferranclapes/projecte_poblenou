@@ -6,13 +6,14 @@ function TeamSummary({logo, onOpenMenu}) {
     const [players, setPlayers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [expandedPlayerId, setExpandedPlayerId] = useState(null);
+    const [editingPermission] = useState((localStorage.getItem('is_admin') === 'true' || localStorage.getItem('role') === 'coach') ? true : false);
 
     const togglePlayerDetails = (playerId) => {
         setExpandedPlayerId(expandedPlayerId === playerId ? null : playerId);
     };
 
     const fetchPlayers = () => {
-        axios.get('http://127.0.0.1:8000/players/')
+        axios.get('http://127.0.0.1:8000/players')
         .then(response => {
             setPlayers(response.data);
             setLoading(false);
@@ -26,24 +27,6 @@ function TeamSummary({logo, onOpenMenu}) {
     useEffect(() => {
         fetchPlayers();
     }, []);
-
-    const handlePermissionChange = (playerId, newRole, isAdmin) => {
-        const token = localStorage.getItem('token');
-
-        axios.patch(`http://127.0.0.1:8000/players/${playerId}/permissions/`, {
-            role: newRole,
-            is_admin: isAdmin
-        }, {
-            headers: {'Authorization': `Bearer ${token}`}
-        })
-        .then(()=>{
-            alert('⚙️ Permisos actualitzats correctament!');
-            fetchPlayers();
-        })
-        .catch(error => {
-            alert(error.response?.data?.detail || "No s'han pogut canviar els permisos.");
-        });
-    };
 
     if (loading) return <p>Carregant la plantilla de l'equip...</p>
 
@@ -77,13 +60,17 @@ function TeamSummary({logo, onOpenMenu}) {
                                     <div>
                                         <strong>Posició Principal:</strong> {player.main_position}
                                     </div>
-                                    <button style={theme.teamSummary_edit_detail_button}>✏️</button>
+                                    {editingPermission && (
+                                        <button style={theme.teamSummary_edit_detail_button}>✏️</button>
+                                    )}
                                 </div>
                                 <div style={theme.teamSummary_detail_row}>
                                     <div>
                                         <strong>Segona Posició:</strong> {player.secondary_position ? player.secondary_position : 'No assignada'}
                                     </div>
-                                    <button style={theme.teamSummary_edit_detail_button}>✏️</button>
+                                    {editingPermission && (
+                                        <button style={theme.teamSummary_edit_detail_button}>✏️</button>
+                                    )}
                                 </div>
                                 <div style={theme.teamSummary_detail_row}>
                                     <div>
@@ -94,19 +81,25 @@ function TeamSummary({logo, onOpenMenu}) {
                                     <div>
                                         <strong>Equips:</strong> {player.teams?.join(', ') || 'No assignats'}
                                     </div>
-                                    <button style={theme.teamSummary_edit_detail_button}>✏️</button>
+                                    {editingPermission && (
+                                        <button style={theme.teamSummary_edit_detail_button}>✏️</button>
+                                    )}
                                 </div>
                                 <div style={theme.teamSummary_detail_row}>
                                     <div>
                                         <strong>Rol:</strong> {player.role}
                                     </div>
-                                    <button style={theme.teamSummary_edit_detail_button}>✏️</button>
+                                    {editingPermission && (
+                                        <button style={theme.teamSummary_edit_detail_button}>✏️</button>
+                                    )}
                                 </div>
                                 <div style={theme.teamSummary_detail_row}>
                                     <div>
                                         <strong>Accés Admin:</strong> {player.is_admin ? 'Sí' : 'No'}
                                     </div>
-                                    <button style={theme.teamSummary_edit_detail_button}>✏️</button>
+                                    {editingPermission && (
+                                        <button style={theme.teamSummary_edit_detail_button}>✏️</button>
+                                    )}
                                 </div>
 
                                 </div>

@@ -26,7 +26,7 @@ function App() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [isTeamSummaryVisible, setIsTeamSummaryVisible] = useState(false);
 
-  const [preferedName, setPreferedName] = useState(() => {return localStorage.getItem('prefered_name') || ''});
+  const [preferedName, setPreferedName] = useState(() => {return localStorage.getItem('prefered_name') || localStorage.getItem('name') || ''});
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isFormVisible, setIsFormVisible] = useState(false);

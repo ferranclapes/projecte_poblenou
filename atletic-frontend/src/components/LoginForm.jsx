@@ -15,7 +15,7 @@ function LoginForm({ onLoginSuccess, onGoToRegister }) {
 
         setUsername(`${name.toLowerCase()}_${surname1.toLowerCase()}_${surname2.toLowerCase()}`);
 
-        axios.post('http://127.0.0.1:8000/auth/login/', { username, password })
+        axios.post('http://127.0.0.1:8000/auth/login', { username, password })
         .then(response => {
             const data = response.data;
 
@@ -25,6 +25,7 @@ function LoginForm({ onLoginSuccess, onGoToRegister }) {
             localStorage.setItem('user_id', data.player_id);
             localStorage.setItem('username', data.player_username);
             localStorage.setItem('prefered_name', data.prefered_name);
+            localStorage.setItem('name', data.name);
 
             onLoginSuccess();
         })

@@ -31,7 +31,7 @@ app.add_middleware(
 # --------------------------------------------------------------------------------
 
 # --- 1. PLAYER ---
-@app.post("/players/", response_model=schemas.PlayerResponse, status_code=201)
+@app.post("/players", response_model=schemas.PlayerResponse, status_code=201)
 def create_player(player: schemas.CreatePlayer, db: Session = Depends(get_db)):
     existing_player = db.query(models.PlayerModel).filter(models.PlayerModel.name == player.name).first()
     if existing_player:
@@ -64,11 +64,11 @@ def create_player(player: schemas.CreatePlayer, db: Session = Depends(get_db)):
     db.refresh(db_player)
     return db_player
 
-@app.get("/players/", response_model=List[schemas.PlayerResponse])
+@app.get("/players", response_model=List[schemas.PlayerResponse])
 def list_players(db: Session = Depends(get_db)):
     return db.query(models.PlayerModel).all()
 
-@app.patch("/players/{player_id}/permissions/")
+@app.patch("/players/{player_id}")
 def update_player_permissions(player_id: int, perms: schemas.PermissionsUpdate, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
     if current_user['is_admin'] != True:
         raise HTTPException(status_code=403, detail="Només els administradors poden actualitzar permisos.")
@@ -102,7 +102,7 @@ def create_event(event: schemas.CreateEvent, db: Session = Depends(get_db), curr
     db.refresh(db_event)
     return db_event
 
-@app.get("/events/", response_model=List[schemas.EventResponse])
+@app.get("/events", response_model=List[schemas.EventResponse])
 def list_events(db: Session = Depends(get_db)):
     db_events = db.query(models.EventModel).all()    
     return db_events
@@ -126,7 +126,7 @@ def update_event(event_id: int, event_data: schemas.CreateEvent, db: Session = D
     db.refresh(db_event)
     return db_event
 
-@app.delete("/events/{event_id}/")
+@app.delete("/events/{event_id}")
 def delete_event(event_id: int, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
     if current_user['is_admin'] != True and current_user['role'] != models.UserRoleEnum.COACH:
         raise HTTPException(status_code=403, detail="Només els entrenadors o administradors poden eliminar esdeveniments.")
@@ -140,7 +140,7 @@ def delete_event(event_id: int, db: Session = Depends(get_db), current_user: dic
     return {"status": "success", "message": f"Event {event_id} deleted successfully"}
 
 # --- 3. ASSISTANCE ---
-@app.post("/events/{event_id}/assistances/")
+@app.post("/events/{event_id}/assistances")
 def register_assistance(event_id: int, assistance: schemas.UpdateAssistance, db: Session = Depends(get_db)):
     event_exists = db.query(models.EventModel).filter(models.EventModel.id == event_id).first()
     if not event_exists:
@@ -170,7 +170,7 @@ def register_assistance(event_id: int, assistance: schemas.UpdateAssistance, db:
     return {"status": "success", "message": f"Assistance updated to {assistance.status} for player {assistance.player_id} in event {event_id}"}
 
 # --- 4. EVENT SUMMARY ---
-@app.get("/events/{event_id}/summary/")
+@app.get("/events/{event_id}/summary")
 def get_event_summary(event_id: int, db: Session = Depends(get_db)):
     event = db.query(models.EventModel).filter(models.EventModel.id == event_id).first()
     if not event:
@@ -207,7 +207,7 @@ def get_event_summary(event_id: int, db: Session = Depends(get_db)):
     }
 
 # --- 5. AUTHENTICATION ---
-@app.post("/auth/login/")
+@app.post("/auth/login")
 def login(login_data: schemas.LoginRequest, db: Session = Depends(get_db)):
     db_player = db.query(models.PlayerModel).filter(models.PlayerModel.username == login_data.username).first()
     if not db_player:
