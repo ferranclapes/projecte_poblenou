@@ -18,6 +18,8 @@ class PlayerBase(BaseModel):
     prefered_name: Optional[str] = None
     pronouns: Optional[models.PronounsEnum] = None
 
+    club: Optional[str] = None
+    team: Optional[str] = None
     sex: models.SexEnum
     main_position: models.PositionEnum
     secondary_position: Optional[models.PositionEnum] = None
@@ -52,3 +54,13 @@ class UpdateAssistance(BaseModel):
     player_id: int
     status: str
     comment: Optional[str] = None
+
+class TeamBase(BaseModel):
+    name: str
+    category: Optional[str] = None
+
+class TeamResponse(TeamBase):
+    id: int
+
+    class Config:
+        from_attributes = True
