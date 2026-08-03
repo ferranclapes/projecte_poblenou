@@ -69,20 +69,21 @@ def list_players(db: Session = Depends(get_db)):
     return db.query(models.PlayerModel).all()
 
 @app.patch("/players/{player_id}")
-def update_player_permissions(player_id: int, perms: schemas.PermissionsUpdate, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
-    if current_user['is_admin'] != True:
-        raise HTTPException(status_code=403, detail="Només els administradors poden actualitzar permisos.")
-    
+def update_player_pprofile(player_id: int, player_data: dict, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+    if current_user['role'] != models.UserRoleEnum.COACH and current_user['is_admin'] != True:
+        raise HTTPException(status_code=403, detail="Només els coaches i els administradors poden actualitzar el perfil.")
+
     db_player = db.query(models.PlayerModel).filter(models.PlayerModel.id == player_id).first()
     if not db_player:
         raise HTTPException(status_code=404, detail="Player not found")
     
-    db_player.role = perms.role
-    db_player.is_admin = perms.is_admin
+    for key, value in player_data.items():
+        if hasattr(db_player, key):
+            setattr(db_player, key, value)
 
     db.commit()
     db.refresh(db_player)
-    return {"status": "success", "message": f"Player {player_id} permissions updated successfully."}
+    return {"status": "success", "message": "Perfil actualitzat correctament"}
 
 # --- 2. EVENT ---
 @app.post("/events", response_model=schemas.EventResponse, status_code=201)

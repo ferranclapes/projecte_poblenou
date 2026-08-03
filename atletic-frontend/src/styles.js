@@ -352,6 +352,14 @@ export const theme = {
         fontSize: '14px',
         cursor: 'pointer'
     },
+    teamSummary_edit_detail_container: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        width: '100%'
+    },
+    teamSummary_select_input_option: {
+        fontSize: '9px'
+    },
 
     /*==================================================
     =                      USEFUL                      =
