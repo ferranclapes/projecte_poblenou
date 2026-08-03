@@ -1,6 +1,5 @@
-import sys
 from sqlalchemy.orm import Session
-from database import SessionLocal, engine
+from database import SessionLocal
 import models
 import auth
 
