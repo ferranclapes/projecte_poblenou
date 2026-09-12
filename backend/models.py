@@ -1,8 +1,12 @@
 from datetime import datetime
 from enum import Enum
 from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey, Table, Enum as SQLEnum
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, mapped_column, Mapped
 from backend.database import Base
+
+# Helper for string-based enums in SQLAlchemy
+def get_enum_values(enum_class):
+    return [e.value for e in enum_class]
 
 class UserRoleEnum(str, Enum):
     PLAYER = "jugador"
@@ -65,22 +69,22 @@ class PlayerModel(Base):
     surname1 = Column(String(100), nullable=False)
     surname2 = Column(String(100), nullable=False)
     prefered_name = Column(String(100), nullable=True)
-    pronouns = Column(SQLEnum(PronounsEnum), nullable=True)
+    pronouns = Column(SQLEnum(PronounsEnum, values_callable=get_enum_values), nullable=True)
 
     # Volleyball-specific attributes
-    sex = Column(SQLEnum(SexEnum), nullable=False)
-    main_position = Column(SQLEnum(PositionEnum), nullable=False)
-    secondary_position = Column(SQLEnum(PositionEnum), nullable=True)
+    sex = Column(SQLEnum(SexEnum, values_callable=get_enum_values), nullable=False)
+    main_position = Column(SQLEnum(PositionEnum, values_callable= get_enum_values), nullable=False)
+    secondary_position = Column(SQLEnum(PositionEnum, values_callable=get_enum_values), nullable=True)
 
     # User role and admin status
-    role = Column(SQLEnum(UserRoleEnum), default=UserRoleEnum.PLAYER, nullable=False)
+    role = Column(SQLEnum(UserRoleEnum, values_callable=get_enum_values), default=UserRoleEnum.PLAYER, nullable=False)
     is_admin = Column(Boolean, default=False)
 
 class EventModel(Base):
     __tablename__ = "events"
     
     id = Column(Integer, primary_key=True, index=True)
-    event_type = Column(SQLEnum(EventTypeEnum), nullable=False)
+    event_type = Column(SQLEnum(EventTypeEnum, values_callable=get_enum_values), nullable=False)
     name = Column(String(255), nullable=True)
     date_time = Column(DateTime, nullable=False)
     location = Column(String(255), nullable=True)
@@ -92,7 +96,7 @@ class AssistanceModel(Base):
     id = Column(Integer, primary_key=True, index=True)
     player_id = Column(Integer, ForeignKey("players.id", ondelete="CASCADE"), nullable=False)
     event_id = Column(Integer, ForeignKey("events.id", ondelete="CASCADE"), nullable=False)
-    status = Column(SQLEnum(AssistanceStatusEnum), default=AssistanceStatusEnum.DONT_KNOW, nullable=False)
+    status = Column(SQLEnum(AssistanceStatusEnum, values_callable=get_enum_values), default=AssistanceStatusEnum.DONT_KNOW, nullable=False)
     comment = Column(Text, nullable=True)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 

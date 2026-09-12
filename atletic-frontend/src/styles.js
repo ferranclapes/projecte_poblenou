@@ -355,6 +355,7 @@ export const theme = {
     teamSummary_edit_detail_container: {
         display: 'flex',
         justifyContent: 'space-between',
+        alignItems: 'flex-start',
         width: '100%'
     },
     teamSummary_select_input_option: {

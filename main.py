@@ -16,9 +16,14 @@ Base.metadata.create_all(bind=engine)
 # Initialize FastAPI app
 app = FastAPI(title="Atlètic Poblenou app - API")
 from fastapi.middleware.cors import CORSMiddleware
+
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -51,8 +56,6 @@ def create_player(player: schemas.CreatePlayer, db: Session = Depends(get_db)):
         prefered_name=player.prefered_name,
         pronouns=player.pronouns,
 
-        club=player.club,
-        team=player.team,
         sex=player.sex,
         main_position=player.main_position,
         secondary_position=player.secondary_position,
@@ -60,20 +63,56 @@ def create_player(player: schemas.CreatePlayer, db: Session = Depends(get_db)):
         role = player.role,
 
         hashed_password=hashed_password,
-        is_admin = True if player.role == models.UserRoleEnum.COACH else False
+        is_admin = True if player.role == models.UserRoleEnum.COACH.value else False
     )
     db.add(db_player)
     db.commit()
     db.refresh(db_player)
+
+    if player.teams_id:
+        for team_id in player.teams_id:
+            db.execute(
+                text("INSERT INTO player_teams (player_id, team_id) VALUES (:p_id, :t_id)"),
+                {"p_id": db_player.id, "t_id": team_id}
+            )
+        db.commit()
+
     return db_player
 
 @app.get("/players", response_model=List[schemas.PlayerResponse])
 def list_players(db: Session = Depends(get_db)):
-    return db.query(models.PlayerModel).all()
+    # 1. Obtenim tots els jugadors
+    query_players = text("""
+        SELECT id, username, name, surname1, surname2, prefered_name, 
+        pronouns, sex, main_position, secondary_position, role, is_admin
+        FROM players
+        ORDER BY name ASC
+    """)
+    players_result = db.execute(query_players).mappings().all()
+    
+    players_list = []
+    
+    # 2. Per a cada jugador, busquem els seus equips a la taula intermèdia
+    for p in players_result:
+        player_dict = dict(p)
+        
+        query_teams = text("""
+            SELECT t.id, t.name, t.category
+            FROM teams t
+            INNER JOIN player_teams pt ON t.id = pt.team_id
+            WHERE pt.player_id = :p_id
+        """)
+        teams_result = db.execute(query_teams, {"p_id": player_dict["id"]}).mappings().all()
+        
+        # Afegim la llista d'equips (ex: [{'id': 1, 'name': 'Sènior A'}, ...])
+        player_dict["teams"] = [dict(t) for t in teams_result]
+        players_list.append(player_dict)
+
+    return players_list
 
 @app.patch("/players/{player_id}")
 def update_player_pprofile(player_id: int, player_data: dict, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
-    if current_user['role'] != models.UserRoleEnum.COACH and current_user['is_admin'] != True:
+    if current_user['role'] != models.UserRoleEnum.COACH.value and current_user['is_admin'] != True:
         raise HTTPException(status_code=403, detail="Només els coaches i els administradors poden actualitzar el perfil.")
 
     db_player = db.query(models.PlayerModel).filter(models.PlayerModel.id == player_id).first()
@@ -88,7 +127,27 @@ def update_player_pprofile(player_id: int, player_data: dict, db: Session = Depe
     db.refresh(db_player)
     return {"status": "success", "message": "Perfil actualitzat correctament"}
 
-@app.post("players/{player_id}/teams/{team_id}")
+@app.put("/players/{player_id}/teams")
+def update_player_teams(player_id: int, payload: dict, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+    if current_user['role'] != models.UserRoleEnum.COACH.value and current_user['is_admin'] != True:
+        raise HTTPException(status_code=403, detail="Només els coaches i els administradors poden actualitzar els equips d'un jugador.")
+
+    db_player = db.query(models.PlayerModel).filter(models.PlayerModel.id == player_id).first()
+    if not db_player:
+        raise HTTPException(status_code=404, detail="Player not found")
+    
+    # Remove existing team associations
+    db.execute(text("DELETE FROM player_teams WHERE player_id = :p_id"), {"p_id": player_id})
+
+    team_ids = payload.get("team_ids", [])
+    # Add new team associations
+    for team_id in team_ids:
+        db.execute(text("INSERT INTO player_teams (player_id, team_id) VALUES (:p_id, :t_id)"), {"p_id": player_id, "t_id": team_id})
+    
+    db.commit()
+    return {"status": "success", "message": "Equips del jugador actualitzats correctament"}
+
+@app.put("players/{player_id}/teams/{team_id}")
 def assign_player_to_team(player_id: int, team_id: int, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
     if current_user["is_admin"] != True:
         raise HTTPException(status_code=403, detail="Només els administradors poden assignar jugadors a equips.")
@@ -129,7 +188,7 @@ def list_events(db: Session = Depends(get_db)):
 
 @app.put("/events/{event_id}")
 def update_event(event_id: int, event_data: schemas.CreateEvent, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
-    if current_user['is_admin'] != True and current_user['role'] != models.UserRoleEnum.COACH:
+    if current_user['is_admin'] != True and current_user['role'] != models.UserRoleEnum.COACH.value:
         raise HTTPException(status_code=403, detail="Només els entrenadors o administradors poden actualitzar esdeveniments.")
 
     db_event = db.query(models.EventModel).filter(models.EventModel.id == event_id).first()
@@ -148,7 +207,7 @@ def update_event(event_id: int, event_data: schemas.CreateEvent, db: Session = D
 
 @app.delete("/events/{event_id}")
 def delete_event(event_id: int, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
-    if current_user['is_admin'] != True and current_user['role'] != models.UserRoleEnum.COACH:
+    if current_user['is_admin'] != True and current_user['role'] != models.UserRoleEnum.COACH.value:
         raise HTTPException(status_code=403, detail="Només els entrenadors o administradors poden eliminar esdeveniments.")
 
     event = db.query(models.EventModel).filter(models.EventModel.id == event_id).first()
@@ -161,7 +220,7 @@ def delete_event(event_id: int, db: Session = Depends(get_db), current_user: dic
 
 @app.post("/events/{event_id}/teams/{team_id}")
 def assign_event_to_team(event_id: int, team_id: int, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
-    if current_user["is_admin"] != True and current_user['role'] != models.UserRoleEnum.COACH:
+    if current_user["is_admin"] != True and current_user['role'] != models.UserRoleEnum.COACH.value:
         raise HTTPException(status_code=403, detail="Només els entrenadors o administradors poden assignar esdeveniments a equips.")
     
     check_query = text("SELECT * FROM event_teams WHERE event_id = :e_id AND team_id = :t_id")
@@ -214,18 +273,18 @@ def get_event_summary(event_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Event not found")
     
     total_confirmed = 0
-    sex_balance = {models.SexEnum.MALE: 0, models.SexEnum.FEMALE: 0}
+    sex_balance = {models.SexEnum.MALE.value: 0, models.SexEnum.FEMALE.value: 0}
     position_balance = {
-        models.PositionEnum.SETTER: 0,
-        models.PositionEnum.MIDDLE: 0,
-        models.PositionEnum.OPPOSITE: 0,
-        models.PositionEnum.OUTSIDE: 0,
-        models.PositionEnum.LIBERO: 0
+        models.PositionEnum.SETTER.value: 0,
+        models.PositionEnum.MIDDLE.value: 0,
+        models.PositionEnum.OPPOSITE.value: 0,
+        models.PositionEnum.OUTSIDE.value: 0,
+        models.PositionEnum.LIBERO.value: 0
     }
 
     confirmed_assistances = db.query(models.AssistanceModel).filter(
         models.AssistanceModel.event_id == event_id,
-        models.AssistanceModel.status == models.AssistanceStatusEnum.ASSISTING
+        models.AssistanceModel.status == models.AssistanceStatusEnum.ASSISTING.value
     ).all()
     for assistance in confirmed_assistances:
         total_confirmed += 1

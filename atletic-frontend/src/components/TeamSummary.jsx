@@ -12,6 +12,7 @@ function TeamSummary({logo, onOpenMenu}) {
     const [editingPermission] = useState((localStorage.getItem('is_admin') === 'true' || localStorage.getItem('role') === 'coach') ? true : false);
     const [editingCell, setEditingCell] = useState(null);
     const [editValue, setEditValue] = useState('');
+    const [availableTeams, setAvailableTeams] = useState([]);
 
     const togglePlayerDetails = (playerId) => {
         setExpandedPlayerId(expandedPlayerId === playerId ? null : playerId);
@@ -29,18 +30,49 @@ function TeamSummary({logo, onOpenMenu}) {
         });
     }
 
+    const fetchTeams = () => {
+        axios.get('http://127.0.0.1:8000/teams')
+            .then(response => {
+                setAvailableTeams(response.data);
+            })
+            .catch(error => {
+                console.error('Error carregant equips:', error);
+            });
+    };
+
     useEffect(() => {
         fetchPlayers();
+        fetchTeams();
     }, []);
 
     const startEditing = (playerId, field, currentValue) => {
         setEditingCell({ playerId, field });
-        setEditValue(currentValue ?? '');
+        if (field === 'teams') {
+            setEditValue(currentValue || []);
+        } else {
+            setEditValue(currentValue ?? '');
+        }
     };
 
     const saveFieldUpdate = (playerId) => {
         const token = localStorage.getItem('token');
         const { field } = editingCell;
+
+        if (field === 'teams') {
+            axios.put(`http://127.0.0.1:8000/players/${playerId}/teams`, { team_ids: editValue }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(() => {
+                setEditingCell(null);
+                fetchPlayers();
+            })
+            .catch(error => {
+                console.error('Error updating player teams:', error);
+            });
+            return;
+        }
 
         let payload = {};
         payload[field] = editValue;
@@ -142,11 +174,60 @@ function TeamSummary({logo, onOpenMenu}) {
                                     </div>
                                 </div>
                                 <div style={theme.teamSummary_detail_row}>
-                                    <div>
-                                        <strong>Equips:</strong> {player.teams?.join(', ') || 'No assignats'}
-                                    </div>
-                                    {editingPermission && (
-                                        <button style={theme.teamSummary_edit_detail_button}>✏️</button>
+                                    {isEditing('teams') ? (
+                                        <div style={theme.teamSummary_edit_detail_container}>
+                                            <div style={{display: 'flex', alignContent: 'flex-start'}}>
+                                                <strong>Equips:</strong>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px'}}>
+                                                    {availableTeams.map(t => {
+                                                        // Comprovem si l'equip ja està seleccionat
+                                                        const isChecked = Array.isArray(editValue) && editValue.includes(t.id);
+
+                                                        return (
+                                                            <label key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={isChecked}
+                                                                    onChange={(e) => {
+                                                                        if (e.target.checked) {
+                                                                            setEditValue([...editValue, t.id]);
+                                                                        } else {
+                                                                            setEditValue(editValue.filter(id => id !== t.id));
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                {t.name} {t.category ? `(${t.category})` : ''}
+                                                            </label>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '8px', marginTop: '5px' }}>
+                                                <button onClick={() => saveFieldUpdate(player.id)} style={theme.teamSummary_edit_detail_button}>💾</button>
+                                                <button onClick={() => setEditingCell(null)} style={theme.teamSummary_edit_detail_button}>❌</button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div>
+                                                <strong>Equips:</strong>{' '}
+                                                {player.teams && player.teams.length > 0
+                                                    ? player.teams.map(t => t.name).join(', ')
+                                                    : 'No assignats'}
+                                            </div>
+                                            {editingPermission && (
+                                                <button 
+                                                    onClick={() => {
+                                                        // 🚀 Passem un array pur amb els IDs [1, 2] per als checkboxes
+                                                        const currentTeamIds = player.teams ? player.teams.map(t => t.id) : [];
+                                                        startEditing(player.id, 'teams', currentTeamIds);
+                                                    }} 
+                                                    style={theme.teamSummary_edit_detail_button}
+                                                >
+                                                    ✏️
+                                                </button>
+                                            )}
+                                        </>
                                     )}
                                 </div>
                                 <div style={theme.teamSummary_detail_row}>
