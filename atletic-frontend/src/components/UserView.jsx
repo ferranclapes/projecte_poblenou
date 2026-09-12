@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { theme } from '../styles.js';
 
+import PasswordForm from './PasswordForm.jsx';
+
 function UserView({ logo, onOpenMenu}) {
     const [editingCell, setEditingCell] = useState(null);
     const [editValue, setEditValue] = useState('');
     const [player, setPlayer] = useState({});
+    const [showPasswordForm, setShowPasswordForm] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -47,6 +50,7 @@ function UserView({ logo, onOpenMenu}) {
         });
     }
 
+
     return(
         <div>
             <div style={theme.teamSummary_header}>
@@ -61,6 +65,25 @@ function UserView({ logo, onOpenMenu}) {
 
             <div style={theme.userProfile_container}>
                 <h3 style={{margin: '10px 0 5px 0', color: '#ff3131', fontSize: '20px'}}>Informació personal</h3>
+                <div style={{...theme.teamSummary_detail_row, marginBottom: '5px'}}>
+                    {editingCell === 'preferedname' ? (
+                        <div style={theme.teamSummary_edit_detail_container}>
+                            <div>
+                                <strong>Nom Preferit:</strong>
+                                <input type="text" value={editValue} onChange={(e) => setEditValue(e.target.value)}></input>
+                            </div>
+                            <div>
+                                <button onClick={() => saveFieldUpdate()} style={theme.teamSummary_edit_detail_button}>💾</button>
+                                <button onClick={() => setEditingCell(null)} style={theme.teamSummary_edit_detail_button}>❌</button>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                        <div><strong>Nom Preferit:</strong> {player.prefered_name}</div>
+                        <button onClick={() => startEditing("preferedname", player.prefered_name)} style={theme.teamSummary_edit_detail_button}>✏️</button>
+                    </>
+                    )}
+                </div>
                 <div style={{...theme.teamSummary_detail_row, marginBottom: '5px'}}>
                     {editingCell === 'name' ? (
                         <div style={theme.teamSummary_edit_detail_container}>
@@ -142,6 +165,14 @@ function UserView({ logo, onOpenMenu}) {
                     </>
                     )}
                 </div>
+                <h3 style={{margin: '10px 0 5px 0', color: '#ff3131', fontSize: '20px'}}>Altre informació</h3>
+                <button onClick={() =>setShowPasswordForm(true)} style={theme.btnPrimary}>Canviar contrasenya</button>
+
+                {showPasswordForm && (
+                    <PasswordForm
+                    onCancel={() => {setShowPasswordForm(false);}}
+                    />
+                )}
             </div>
         </div>
     )

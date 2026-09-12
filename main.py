@@ -49,6 +49,8 @@ def create_player(player: schemas.CreatePlayer, db: Session = Depends(get_db), c
     plain_password = str(player.password)
 
     hashed_password = auth.get_password_hash(plain_password)
+    if player.prefered_name is None:
+        player.prefered_name = player.name
 
     db_player = models.PlayerModel(
         username=f"{player.name.lower()}_{player.surname1.lower()}_{player.surname2.lower()}",
@@ -175,6 +177,24 @@ def assign_player_to_team(player_id: int, team_id: int, db: Session = Depends(ge
     db.commit()
 
     return {"status": "success", "message": f"Jugador {player_id} assignat a l'equip {team_id} correctament."}
+
+@app.post("/players/{player_id}/change-password")
+def change_password(player_id: int, password_data: schemas.ChangePasswordRequest, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+    if current_user['id'] != player_id and current_user['is_admin'] != True:
+        raise HTTPException(status_code=403, detail="Només el propi usuari o un administrador poden canviar la contrasenya.")
+
+    db_player = db.query(models.PlayerModel).filter(models.PlayerModel.id == player_id).first()
+    if not db_player:
+        raise HTTPException(status_code=404, detail="Usuari no trobat")
+
+    if not auth.verify_password(password_data.current_password, db_player.hashed_password):
+        raise HTTPException(status_code=400, detail="La contrassenya actual és incorrecta.")
+
+    new_hashed_password = auth.get_password_hash(password_data.new_password)
+    db_player.hashed_password = new_hashed_password
+    db.commit()
+
+    return {"status": "success", "message": "Contrasenya canviada correctament"}
 
 # --- 2. EVENT ---
 @app.post("/events", response_model=schemas.EventResponse, status_code=201)
