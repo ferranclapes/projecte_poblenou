@@ -46,7 +46,7 @@ function App() {
 
   const fetchEvents = useCallback(() => {
     const token = localStorage.getItem('token');
-    axios.get('http://127.0.0.1:8000/events/',{
+    axios.get('http://127.0.0.1:8000/events',{
       headers: {Authorization: `Bearer ${token}`}
     })
     .then(response => setEvents(response.data))

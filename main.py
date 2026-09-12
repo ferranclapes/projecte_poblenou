@@ -179,12 +179,40 @@ def create_event(event: schemas.CreateEvent, db: Session = Depends(get_db), curr
     db.add(db_event)
     db.commit()
     db.refresh(db_event)
+
+    print(f"Assigning event {db_event.id} to teams: {event.team_ids}")
+
+    if event.team_ids:
+        for team_id in event.team_ids:
+            db.execute(
+                text("INSERT INTO event_teams (event_id, team_id) VALUES (:e_id, :t_id)"),
+                {"e_id": db_event.id, "t_id": team_id}
+            )
+        db.commit()
     return db_event
 
 @app.get("/events", response_model=List[schemas.EventResponse])
 def list_events(db: Session = Depends(get_db)):
-    db_events = db.query(models.EventModel).all()    
-    return db_events
+    db_events = db.query(models.EventModel).all()
+
+    response_events = []
+    for event in db_events:
+        teams_query = text("SELECT team_id FROM event_teams WHERE event_id = :e_id")
+        teams_res = db.execute(teams_query, {"e_id": event.id}).fetchall()
+        team_ids = [row[0] for row in teams_res]
+
+    event_data = {
+        "id": event.id,
+        "event_type": event.event_type,
+        "name": event.name,
+        "date_time": event.date_time,
+        "location": event.location,
+        "description": event.description,
+        "team_ids": team_ids
+    }
+    response_events.append(event_data)
+
+    return response_events
 
 @app.put("/events/{event_id}")
 def update_event(event_id: int, event_data: schemas.CreateEvent, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
@@ -200,6 +228,18 @@ def update_event(event_id: int, event_data: schemas.CreateEvent, db: Session = D
     db_event.date_time = event_data.date_time
     db_event.location = event_data.location
     db_event.description = event_data.description
+
+    delete_query = text("DELETE FROM event_teams WHERE event_id = :e_id")
+    db.execute(delete_query, {"e_id": event_id})
+
+    print(f"Assigning event {event_id} to teams: {event_data.team_ids}")
+
+    if event_data.team_ids:
+        for team_id in event_data.team_ids:
+            db.execute(
+                text("INSERT INTO event_teams (event_id, team_id) VALUES (:e_id, :t_id)"),
+                {"e_id": event_id, "t_id": team_id}
+            )
 
     db.commit()
     db.refresh(db_event)

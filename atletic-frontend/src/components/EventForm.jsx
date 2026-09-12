@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { theme } from '../styles.js';
 
@@ -9,6 +9,26 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
   const [eventType, setEventType] = useState(editingEvent ? editingEvent.event_type : 'Entrenament');
   const [eventLocation, setEventLocation] = useState(editingEvent ? (editingEvent.location || '') : '');
   const [eventDescription, setEventDescription] = useState(editingEvent ? (editingEvent.description || '') : '');
+
+  const [teams, setTeams] = useState([]);
+  const [selectedTeams, setSelectedTeams] = useState(editingEvent && editingEvent.team_ids ? editingEvent.team_ids : []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    axios.get('http://127.0.0.1:8000/teams', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(response => setTeams(response.data))
+    .catch(error => console.error("Error al obtenir els equips:", error));
+  }, []);
+
+  const handleCheckboxChange = (teamId) => {
+    if (selectedTeams.includes(teamId)) {
+      setSelectedTeams(selectedTeams.filter(id => id !== teamId));
+    } else {
+      setSelectedTeams([...selectedTeams, teamId]);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -26,6 +46,7 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
       date_time: new Date(eventDateTime).toISOString(),
       location: eventLocation || null,
       description: eventDescription || null,
+      team_ids: selectedTeams,
     }
 
     const config = {
@@ -74,6 +95,9 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
     setEventName('');
     setEventDateTime('');
     setEventLocation('');
+    setEventDescription('');
+    setEventType('Entrenament');
+    setSelectedTeams([]);
     onCancelEdit();
     if (onCancelEdit) onCancelEdit(); 
   };
@@ -109,6 +133,23 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
           <div>
             <label style={theme.infoLabel}>Descripció</label>
             <input type="text" value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} placeholder="Ex: Convocatòria per al partit contra el Barça" style={theme.inputField} />
+          </div>
+
+          <div>
+            <label style={theme.infoLabel}>Equips</label>
+            <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', justifyItems: 'start', maxHeight: '120px', overflowY: 'auto', padding: '8px', border: '1px solid #ccc', borderRadius: '4px'}}>
+              {teams.map(team => (
+                <label key={team.id} style={{display: 'flex', alignItems: 'center', fontSize: '14px', cursor: 'pointer'}}>
+                  <input
+                    type="checkbox"
+                    checked={selectedTeams.some(id => Number(id) === Number(team.id))}
+                    onChange={() => handleCheckboxChange(team.id)}
+                    style={{marginRight: '8px'}}
+                  />
+                  {team.name}
+                </label>
+              ))}
+              </div>
           </div>
 
           <div style={theme.form_button_container}>

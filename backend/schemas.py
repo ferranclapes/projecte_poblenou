@@ -57,6 +57,7 @@ class CreateEvent(BaseModel):
     date_time: datetime
     location: Optional[str] = None
     description: Optional[str] = None
+    team_ids: Optional[List[int]] = []
 
 class EventResponse(CreateEvent):
     id: int
