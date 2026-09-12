@@ -10,6 +10,7 @@ import TeamSummary from './components/TeamSummary';
 import EventCard from './components/EventCard';
 import Calendar from './components/Calendar';
 import SideMenu from './components/SideMenu';
+import CreateMemberForm from './components/CreateMemberForm';
 
 import logo from '../assets/logo-atletic.png';
 
@@ -30,6 +31,8 @@ function App() {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isFormVisible, setIsFormVisible] = useState(false);
+
+  const [isCreateMemberFormVisible, setIsCreateMemberFormVisible] = useState(false);
 
   const handleLoginSuccess = () => {
     setIsMenuOpen(false);
@@ -65,6 +68,28 @@ function App() {
     }
   }, [isLoggedIn, fetchEvents]);
 
+  //======================================================================================
+  // MENU HANDLERS
+  //======================================================================================
+
+  const handleViewTeamSummary = () => {
+    setIsTeamSummaryVisible(true);
+    setIsCreateMemberFormVisible(false);
+    setIsMenuOpen(false);
+  };
+  
+  const handleViewMainPage = () => {
+    setIsTeamSummaryVisible(false);
+    setIsCreateMemberFormVisible(false);
+    setIsMenuOpen(false);
+  }
+
+  const handleCreateNewMember = () => {
+    setIsCreateMemberFormVisible(true);
+    setIsTeamSummaryVisible(false);
+    setIsMenuOpen(false);
+  }
+
 
   //======================================================================================
   // RENDERING LOGIC
@@ -88,8 +113,9 @@ function App() {
         isOpen={isMenuOpen} 
         onClose={() => setIsMenuOpen(false)}
         onLogout={handleLogout}
-        onViewMainPage={() => {setIsTeamSummaryVisible(false); setIsMenuOpen(false);}}
-        onViewTeamSummary={() => {setIsTeamSummaryVisible(true); setIsMenuOpen(false);}}
+        onViewMainPage={handleViewMainPage}
+        onViewTeamSummary={handleViewTeamSummary}
+        onCreateNewMember={handleCreateNewMember}
       />
 
       <TeamSummary 
@@ -98,6 +124,27 @@ function App() {
       />
     </div>
       );
+  }
+
+  //* SHOW CREATE MEMBER FORM IF USER WANTS TO SEE IT
+  if (isCreateMemberFormVisible) {
+    return (
+      <div style={theme.background}>
+        <SideMenu 
+          isOpen={isMenuOpen}
+          onClose={() => setIsMenuOpen(false)}
+          onLogout={handleLogout}
+          onViewMainPage={handleViewMainPage}
+          onViewTeamSummary={handleViewTeamSummary}
+          onCreateNewMember={handleCreateNewMember}
+        />
+        <CreateMemberForm 
+          onMemberCreated={() => handleViewMainPage()}
+          logo={logo}
+          onOpenMenu={() => setIsMenuOpen(true)}
+         />
+      </div>
+    );
   }
 
   //* SHOW EVENT SUMMARY IF AN EVENT IS SELECTED
@@ -119,8 +166,9 @@ function App() {
         isOpen={isMenuOpen} 
         onClose={() => setIsMenuOpen(false)}
         onLogout={handleLogout}
-        onViewMainPage={() => {setIsTeamSummaryVisible(false); setIsMenuOpen(false);}}
-        onViewTeamSummary={() => {setIsTeamSummaryVisible(true); setIsMenuOpen(false);}}
+        onViewMainPage={handleViewMainPage}
+        onViewTeamSummary={handleViewTeamSummary}
+        onCreateNewMember={handleCreateNewMember}
       />
 
       <div style={theme.headers_container}>

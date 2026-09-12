@@ -38,7 +38,10 @@ app.add_middleware(
 
 # --- 1. PLAYER ---
 @app.post("/players", response_model=schemas.PlayerResponse, status_code=201)
-def create_player(player: schemas.CreatePlayer, db: Session = Depends(get_db)):
+def create_player(player: schemas.CreatePlayer, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+    if current_user['role'] != models.UserRoleEnum.COACH.value and current_user['is_admin'] != True:
+        raise HTTPException(status_code=403, detail="Només els coaches i els administradors poden actualitzar el perfil.")
+    
     existing_player = db.query(models.PlayerModel).filter(models.PlayerModel.name == player.name).first()
     if existing_player:
        raise HTTPException(status_code=400, detail="Ja existeix un jugador amb aquest nom.")

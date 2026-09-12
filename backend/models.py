@@ -28,6 +28,7 @@ class PositionEnum(str, Enum):
     OUTSIDE = "Punta"
     OPPOSITE = "Oposat"
     LIBERO = "Líbero"
+    NONE = "-"
 
 class EventTypeEnum(str, Enum):
     MATCH = "Partit"

@@ -313,7 +313,8 @@ export const theme = {
         borderRadius: '10px 10px 10px 10px',
         padding: '10px 10px 20px',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        marginBottom: '15px',
     },
     teamSummary_player_continer: {
         display: 'flex',
