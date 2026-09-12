@@ -113,9 +113,16 @@ def list_players(db: Session = Depends(get_db)):
 
     return players_list
 
+@app.get("/players/{player_id}", response_model=schemas.PlayerResponse)
+def get_player(player_id: int, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+    player = db.query(models.PlayerModel).filter(models.PlayerModel.id == player_id).first()
+    if not player:
+        raise HTTPException(status_code=404, detail="Jugador no trobat")
+    return player
+
 @app.patch("/players/{player_id}")
 def update_player_pprofile(player_id: int, player_data: dict, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
-    if current_user['role'] != models.UserRoleEnum.COACH.value and current_user['is_admin'] != True:
+    if current_user['role'] != models.UserRoleEnum.COACH.value and current_user['is_admin'] != True and current_user['id'] != player_id:
         raise HTTPException(status_code=403, detail="Només els coaches i els administradors poden actualitzar el perfil.")
 
     db_player = db.query(models.PlayerModel).filter(models.PlayerModel.id == player_id).first()
@@ -125,6 +132,9 @@ def update_player_pprofile(player_id: int, player_data: dict, db: Session = Depe
     for key, value in player_data.items():
         if hasattr(db_player, key):
             setattr(db_player, key, value)
+
+    if "name" in player_data or "surname1" in player_data or "surname2" in player_data:
+        db_player.username = f"{db_player.name}_{db_player.surname1}_{db_player.surname2}"
 
     db.commit()
     db.refresh(db_player)

@@ -364,6 +364,25 @@ export const theme = {
     },
 
     /*==================================================
+    =                     USER PROFILE                 =
+    ==================================================*/
+    
+    userProfile_container: {
+        background: '#ffffff',
+        borderRadius: '10px 10px 10px 10px',
+        padding: '10px 10px 20px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        marginBottom: '15px',
+    },
+    userProfile_label: {
+        fontSize: '14px',
+        marginBottom: '5px',
+        fontWeight: 'bold',
+        marginRight: '10px'
+    },
+    /*==================================================
     =                      USEFUL                      =
     ==================================================*/
 

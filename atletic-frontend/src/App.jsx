@@ -11,6 +11,7 @@ import EventCard from './components/EventCard';
 import Calendar from './components/Calendar';
 import SideMenu from './components/SideMenu';
 import CreateMemberForm from './components/CreateMemberForm';
+import UserView from './components/UserView';
 
 import logo from '../assets/logo-atletic.png';
 
@@ -33,6 +34,7 @@ function App() {
   const [isFormVisible, setIsFormVisible] = useState(false);
 
   const [isCreateMemberFormVisible, setIsCreateMemberFormVisible] = useState(false);
+  const [isUserViewVisible, setIsUserViewVisible] = useState(false);
 
   const handleLoginSuccess = () => {
     setIsMenuOpen(false);
@@ -76,18 +78,28 @@ function App() {
     setIsTeamSummaryVisible(true);
     setIsCreateMemberFormVisible(false);
     setIsMenuOpen(false);
+    setIsUserViewVisible(false);
   };
   
   const handleViewMainPage = () => {
     setIsTeamSummaryVisible(false);
     setIsCreateMemberFormVisible(false);
     setIsMenuOpen(false);
+    setIsUserViewVisible(false);
   }
 
   const handleCreateNewMember = () => {
     setIsCreateMemberFormVisible(true);
     setIsTeamSummaryVisible(false);
     setIsMenuOpen(false);
+    setIsUserViewVisible(false);
+  }
+
+  const handleViewUsuari = () => {
+    setIsCreateMemberFormVisible(false);
+    setIsTeamSummaryVisible(false);
+    setIsMenuOpen(false);
+    setIsUserViewVisible(true);
   }
 
 
@@ -116,6 +128,7 @@ function App() {
         onViewMainPage={handleViewMainPage}
         onViewTeamSummary={handleViewTeamSummary}
         onCreateNewMember={handleCreateNewMember}
+        onViewUsuari={handleViewUsuari}
       />
 
       <TeamSummary 
@@ -137,6 +150,7 @@ function App() {
           onViewMainPage={handleViewMainPage}
           onViewTeamSummary={handleViewTeamSummary}
           onCreateNewMember={handleCreateNewMember}
+          onViewUsuari={handleViewUsuari}
         />
         <CreateMemberForm 
           onMemberCreated={() => handleViewMainPage()}
@@ -147,6 +161,26 @@ function App() {
     );
   }
 
+  //* SHOW USER VIEW IF USER WANTS TO SEE IT
+  if (isUserViewVisible) {
+    return (
+      <div style={theme.background}>
+        <SideMenu 
+          isOpen={isMenuOpen}
+          onClose={() => setIsMenuOpen(false)}
+          onLogout={handleLogout}
+          onViewMainPage={handleViewMainPage}
+          onViewTeamSummary={handleViewTeamSummary}
+          onCreateNewMember={handleCreateNewMember}
+          onViewUsuari={handleViewUsuari}
+        />
+        <UserView 
+          logo={logo}
+          onOpenMenu={() => setIsMenuOpen(true)}
+         />
+      </div>
+    );
+  }
   //* SHOW EVENT SUMMARY IF AN EVENT IS SELECTED
   if (currentEventId !== null) {
     return (<EventSummary eventId={currentEventId} onBack={() => setCurrentEventId(null)}/>);
@@ -169,6 +203,7 @@ function App() {
         onViewMainPage={handleViewMainPage}
         onViewTeamSummary={handleViewTeamSummary}
         onCreateNewMember={handleCreateNewMember}
+        onViewUsuari={handleViewUsuari}
       />
 
       <div style={theme.headers_container}>
