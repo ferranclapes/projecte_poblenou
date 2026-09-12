@@ -15,7 +15,7 @@ function EventCard({event, onClickEvent, onEdit, onRefreshEvents}) {
       })
       .then(() => {
         alert("🗑️ Convocatòria eliminada correctament!");
-        onRefreshEvents;
+        onRefreshEvents();
       })
       .catch(error => {
         console.error("Error al eliminar la convocatòria:", error);

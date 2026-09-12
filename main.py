@@ -201,16 +201,16 @@ def list_events(db: Session = Depends(get_db)):
         teams_res = db.execute(teams_query, {"e_id": event.id}).fetchall()
         team_ids = [row[0] for row in teams_res]
 
-    event_data = {
-        "id": event.id,
-        "event_type": event.event_type,
-        "name": event.name,
-        "date_time": event.date_time,
-        "location": event.location,
-        "description": event.description,
-        "team_ids": team_ids
-    }
-    response_events.append(event_data)
+        event_data = {
+            "id": event.id,
+            "event_type": event.event_type,
+            "name": event.name,
+            "date_time": event.date_time,
+            "location": event.location,
+            "description": event.description,
+            "team_ids": team_ids
+        }
+        response_events.append(event_data)
 
     return response_events
 
@@ -253,6 +253,8 @@ def delete_event(event_id: int, db: Session = Depends(get_db), current_user: dic
     event = db.query(models.EventModel).filter(models.EventModel.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
+
+    db.execute(text("DELETE FROM event_teams WHERE event_id = :e_id"), {"e_id": event_id})
     
     db.delete(event)
     db.commit()
