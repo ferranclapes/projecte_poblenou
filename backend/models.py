@@ -93,6 +93,8 @@ class EventModel(Base):
     location = Column(String(255), nullable=True)
     description = Column(Text, nullable=True)
 
+    teams = relationship("TeamModel", secondary=event_teams)
+
 class AssistanceModel(Base):
     __tablename__ = "assistances"
     

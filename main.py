@@ -1,3 +1,6 @@
+from dateutil.relativedelta import relativedelta
+from datetime import timedelta
+
 from fastapi import FastAPI, HTTPException, Depends
 from typing import List
 from sqlalchemy import text
@@ -170,42 +173,69 @@ def change_password(player_id: int, password_data: schemas.ChangePasswordRequest
     return {"status": "success", "message": "Contrasenya canviada correctament"}
 
 # --- 2. EVENT ---
-@app.post("/events", response_model=schemas.EventResponse, status_code=201)
+@app.post("/events", status_code=201)
 def create_event(event: schemas.CreateEvent, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
-    if current_user['is_admin'] != True:
+    if current_user['is_admin'] != True and current_user.get('role') != models.UserRoleEnum.COACH.value:
         raise HTTPException(status_code=403, detail="Només els entrenadors o administradors poden crear esdeveniments.")
 
-    db_event = models.EventModel(
-        event_type=event.event_type,
-        name=event.name,
-        date_time=event.date_time,
-        location=event.location,
-        description=event.description
-    )
-    db.add(db_event)
-    db.commit()
-    db.refresh(db_event)
+    if event.is_periodic:
+        if not event.periodicity or not event.occurrences:
+            raise HTTPException(status_code=400, detail="Si l'esdeveniment és periòdic, cal especificar la freqüència i el nombre d'ocurrències.")
+        if event.occurrences <= 0:
+            raise HTTPException(status_code=400, detail="El nombre d'ocurrències ha de ser un enter positiu.")
+        if event.periodicity not in ["diaria", "setmanal", "mensual"]:
+            raise HTTPException(status_code=400, detail="La freqüència ha de ser 'diaria', 'setmanal' o 'mensual'.")
 
-    print(f"Assigning event {db_event.id} to teams: {event.team_ids}")
+    created_events = []
+    occurrences = event.occurrences if event.is_periodic else 1
 
-    if event.team_ids:
-        for team_id in event.team_ids:
-            db.execute(
-                text("INSERT INTO event_teams (event_id, team_id) VALUES (:e_id, :t_id)"),
-                {"e_id": db_event.id, "t_id": team_id}
-            )
+    for i in range(occurrences):
+        # Càlcul de la data segons la periodicitat
+        if not event.is_periodic:
+            new_date_time = event.date_time
+        elif event.periodicity == "diaria":
+            new_date_time = event.date_time + timedelta(days=i)
+        elif event.periodicity == "setmanal":
+            new_date_time = event.date_time + timedelta(weeks=i)
+        elif event.periodicity == "mensual":
+            new_date_time = event.date_time + relativedelta(months=i)
+
+        db_event = models.EventModel(
+            event_type=event.event_type,
+            name=event.name,
+            date_time=new_date_time,
+            location=event.location,
+            description=event.description
+        )
+        db.add(db_event)
         db.commit()
-    return db_event
+        db.refresh(db_event)
+
+        # Associar equips a l'esdeveniment
+        if event.team_ids:
+            for team_id in event.team_ids:
+                db.execute(
+                    text("INSERT INTO event_teams (event_id, team_id) VALUES (:e_id, :t_id)"),
+                    {"e_id": db_event.id, "t_id": team_id}
+                )
+            db.commit()
+
+        created_events.append(db_event)
+
+    # Si s'ha creat un de sol, retornem l'objecte; si són múltiples, podem retornar l'últim o una llista
+    return created_events[-1] if len(created_events) == 1 else {"message": f"S'han creat {len(created_events)} esdeveniments correctament."}
 
 @app.get("/events", response_model=List[schemas.EventResponse])
 def list_events(db: Session = Depends(get_db)):
-    db_events = db.query(models.EventModel).all()
+    # 1. Carreguem tots els esdeveniments i els seus equips de cop amb una única consulta optimitzada
+    db_events = db.query(models.EventModel).options(
+        selectinload(models.EventModel.teams)
+    ).all()
 
     response_events = []
     for event in db_events:
-        teams_query = text("SELECT team_id FROM event_teams WHERE event_id = :e_id")
-        teams_res = db.execute(teams_query, {"e_id": event.id}).fetchall()
-        team_ids = [row[0] for row in teams_res]
+        # 2. Extrec els IDs dels equips directament de la relació ja carregada a memòria (sense SQL extra)
+        team_ids = [t.id for t in event.teams]
 
         event_data = {
             "id": event.id,

@@ -58,6 +58,9 @@ class CreateEvent(BaseModel):
     location: Optional[str] = None
     description: Optional[str] = None
     team_ids: Optional[List[int]] = []
+    is_periodic: Optional[bool] = False
+    periodicity: Optional[str] = None
+    occurrences: Optional[int] = None
 
 class EventResponse(CreateEvent):
     id: int

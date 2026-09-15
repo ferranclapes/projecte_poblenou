@@ -13,6 +13,10 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
   const [teams, setTeams] = useState([]);
   const [selectedTeams, setSelectedTeams] = useState(editingEvent && editingEvent.team_ids ? editingEvent.team_ids : []);
 
+  const [isPeriodic, setIsPeriodic] = useState(false);
+  const [periodicity, setPeriodicity] = useState('setmanal');
+  const [occurrences, setOccurrences] = useState(1);
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     axios.get('http://127.0.0.1:8000/teams', {
@@ -47,6 +51,9 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
       location: eventLocation || null,
       description: eventDescription || null,
       team_ids: selectedTeams,
+      is_periodic: isPeriodic,
+      periodicity: isPeriodic ? periodicity : null,
+      occurrences: isPeriodic ? Number(occurrences) : null
     }
 
     const config = {
@@ -98,6 +105,9 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
     setEventDescription('');
     setEventType('Entrenament');
     setSelectedTeams([]);
+    setIsPeriodic(false);
+    setPeriodicity('setmanal');
+    setOccurrences(1);
     onCancelEdit();
     if (onCancelEdit) onCancelEdit(); 
   };
@@ -151,6 +161,53 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
               ))}
               </div>
           </div>
+
+          {!editingEvent && ( // Normalment només es crea periòdicament al crear, no al modificar un d'individual
+          <div>
+            <label style={theme.infoLabel}>
+              <input
+                    type="checkbox"
+                    checked={isPeriodic}
+                    onChange={(e) => setIsPeriodic(e.target.checked)}
+                    style={{ marginRight: '8px', width: '16px', height: '16px' }}
+                  />
+                Es repeteix
+              </label>
+                
+
+              {isPeriodic && (
+              <div style={{ padding: '10px', borderRadius: '6px', border: '1px solid #ddd', alignItems: 'center'}}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px' }}>
+                  <div>
+                    <label style={theme.infoLabel}>Freqüència</label>
+                    <select 
+                      value={periodicity} 
+                      onChange={(e) => setPeriodicity(e.target.value)} 
+                      style={theme.inputField}
+                    >
+                      <option value="diari">Cada dia</option>
+                      <option value="setmanal">Cada setmana</option>
+                      <option value="mensual">Cada mes</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={theme.infoLabel}>Repeticions totals</label>
+                    <input 
+                      type="number" 
+                      min="2" 
+                      max="52" 
+                      value={occurrences} 
+                      onChange={(e) => setOccurrences(e.target.value)} 
+                      style={theme.inputField} 
+                      required={isPeriodic}
+                    />
+                  </div>
+                </div>
+              </div>
+              )}
+          </div>
+          )}
 
           <div style={theme.form_button_container}>
             <button type="submit" style={theme.btnPrimary}>{editingEvent ? "Desar canvis" : "Crear convocatòria"}</button>

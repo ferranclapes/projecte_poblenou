@@ -402,7 +402,7 @@ export const theme = {
     ==================================================*/
 
     infoLabel: {
-        fontSize: '14px'
+        fontSize: '14px',
     },
 
     inputField: {

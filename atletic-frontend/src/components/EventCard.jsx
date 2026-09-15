@@ -5,25 +5,6 @@ import {theme} from '../styles.js';
 function EventCard({event, onClickEvent, onEdit, onRefreshEvents}) {
   const [assistance, setAssistance] = useState(null);
 
-  //* Handle the deletion of an event
-  const handleDeleteEvent = (e) => {
-    e.stopPropagation();
-    if (window.confirm("⚠️ Segur que vols eliminar aquesta convocatòria? Es borraran totes les assistències.")) {
-      const token = localStorage.getItem('token');
-      axios.delete(`http://127.0.0.1:8000/events/${event.id}`, {
-        headers: {Authorization: `Bearer ${token}`}
-      })
-      .then(() => {
-        alert("🗑️ Convocatòria eliminada correctament!");
-        onRefreshEvents();
-      })
-      .catch(error => {
-        console.error("Error al eliminar la convocatòria:", error);
-        alert("Hi ha hagut un error al eliminar la convocatòria.");
-      });
-    }
-  }
-
   //* Called when clicking an assistance button
   const handleVote = (status, e) => {
     e.stopPropagation(); // Prevent the event card click from triggering
@@ -59,7 +40,6 @@ function EventCard({event, onClickEvent, onEdit, onRefreshEvents}) {
             {localStorage.getItem('is_admin') === 'true' && (
             <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
               <button onClick={onEdit} style={theme.edit_event_button} title="Editar">✏️</button>
-              <button onClick={(e) => handleDeleteEvent(e)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: 'var(--text)' }} title="Eliminar">🗑️</button>
             </div>
             )}
           </div>
