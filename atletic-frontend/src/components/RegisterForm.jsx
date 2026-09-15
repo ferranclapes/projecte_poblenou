@@ -1,3 +1,5 @@
+//! TOT AQUEST COMPONENT ESTÀ OBSOLET I NO S'UTILITZA
+
 import { useState } from 'react';
 import axios from 'axios';
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 
-function LoginForm({ onLoginSuccess, onGoToRegister }) {
+function LoginForm({ onLoginSuccess }) {
     const [name, setName] = useState('');
     const [surname1, setSurname1] = useState('');
     const [surname2, setSurname2] = useState('');
@@ -40,7 +40,7 @@ function LoginForm({ onLoginSuccess, onGoToRegister }) {
 
     return (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-            <form onSubmit={handleSubmit} style={{ background: 'var(--bg)', padding: '30px', borderRadius: '12px', boxShadow: 'var(--shadow)', width: '100%', maxWith: '400px', display: 'flex', flexDirection: 'column', gap: '15px', maxWidth: '350px' }}>
+            <form onSubmit={handleSubmit} style={{ background: 'var(--bg)', padding: '30px', margin: '10px', borderRadius: '12px', boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)', width: '100%', maxWith: '400px', display: 'flex', flexDirection: 'column', gap: '15px', maxWidth: '350px' }}>
 
                 <div style={{ textAlign: 'center', marginBottom: '10px' }}>
                     <h2 style={{ margin: '0 0 5px 0', color: 'var(--accent)' }}>🏐 Atlètic Poblenou</h2>
@@ -105,6 +105,7 @@ function LoginForm({ onLoginSuccess, onGoToRegister }) {
                 Entrar a l'App
                 </button>
 
+                {/* Codi antic: S'ha eliminat la opció de registrar-se directament des de la pantalla de login per seguretat i control d'accés.
                 <div style={{ textAlign: 'center', marginTop: '10px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
                     <span style={{ fontSize: '13px', color: '#666' }}>Ets nou a l'equip? </span>
                     <button 
@@ -115,6 +116,7 @@ function LoginForm({ onLoginSuccess, onGoToRegister }) {
                         Crea un compte
                     </button>
                 </div>
+                */}
             </form>
         </div>
     );

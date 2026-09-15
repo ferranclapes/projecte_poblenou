@@ -111,7 +111,7 @@ function App() {
   if (!isLoggedIn) {
     if (isRegistering) {
       return (
-        <RegisterForm onCancel={() => setIsRegistering(false)} onRegisterSuccess={() => setIsRegistering(false)} />
+        <RegisterForm onCancel={() => setIsRegistering(false)} />
       );
     }
     return <LoginForm onLoginSuccess={handleLoginSuccess} onGoToRegister={() => setIsRegistering(true)} />;
