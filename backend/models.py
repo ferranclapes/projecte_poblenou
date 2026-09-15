@@ -19,7 +19,7 @@ class SexEnum(str, Enum):
 class PronounsEnum(str, Enum):
     HE_HIM = "Ell"
     SHE_HER = "Ella"
-    THEY_THEM = "Elle"
+    THEY_THEM = "Elli"
     OTHER = "Altres"
 
 class PositionEnum(str, Enum):

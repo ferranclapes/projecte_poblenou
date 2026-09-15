@@ -74,7 +74,7 @@ function CreateMemberForm({onMemberCreated, logo, onOpenMenu}) {
             name: name,
             surname1: surname1,
             surname2: surname2,
-            prefered_name: preferedName,
+            prefered_name: preferedName === '' ? name : preferedName,
             pronouns: pronouns,
 
             sex: sex,
@@ -85,7 +85,7 @@ function CreateMemberForm({onMemberCreated, logo, onOpenMenu}) {
 
             team_ids: formattedTeamIds,
 
-            password: preferedName+surname1
+            password: preferedName === '' ? name+surname1 : preferedName+surname1,
         }
 
         axios.post('http://127.0.0.1:8000/players', payload,{

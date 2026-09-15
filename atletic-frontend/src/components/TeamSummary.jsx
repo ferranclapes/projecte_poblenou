@@ -8,7 +8,7 @@ function TeamSummary({logo, onOpenMenu}) {
     const [loading, setLoading] = useState(true);
     const [expandedPlayerId, setExpandedPlayerId] = useState(null);
     const [expandedSection, setExpandedSection] = useState({});
-    const [editingPermission] = useState((localStorage.getItem('is_admin') === 'true' || localStorage.getItem('role') === 'coach') ? true : false);
+    const [editingPermission] = useState((localStorage.getItem('is_admin') === 'true' || localStorage.getItem('role') === 'entrenador') ? true : false);
     const [editingCell, setEditingCell] = useState(null);
     const [editValue, setEditValue] = useState('');
     const [availableTeams, setAvailableTeams] = useState([]);
