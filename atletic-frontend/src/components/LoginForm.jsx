@@ -5,7 +5,6 @@ function LoginForm({ onLoginSuccess }) {
     const [name, setName] = useState('');
     const [surname1, setSurname1] = useState('');
     const [surname2, setSurname2] = useState('');
-    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -13,7 +12,7 @@ function LoginForm({ onLoginSuccess }) {
         e.preventDefault();
         setErrorMessage('');
 
-        setUsername(`${name.toLowerCase()}_${surname1.toLowerCase()}_${surname2.toLowerCase()}`);
+        const username =`${name.toLowerCase()}_${surname1.toLowerCase()}_${surname2.toLowerCase()}`;
 
         axios.post('http://127.0.0.1:8000/auth/login', { username, password })
         .then(response => {
