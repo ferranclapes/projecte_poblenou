@@ -81,6 +81,8 @@ class PlayerModel(Base):
     role = Column(SQLEnum(UserRoleEnum, values_callable=get_enum_values), default=UserRoleEnum.PLAYER, nullable=False)
     is_admin = Column(Boolean, default=False)
 
+    teams = relationship("TeamModel", secondary=player_teams, back_populates="players")
+
 class EventModel(Base):
     __tablename__ = "events"
     
@@ -107,3 +109,5 @@ class TeamModel(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), unique=True, index=True, nullable=False)
     category = Column(String(150), nullable=True)    #Lliga i divisió de l'equip
+
+    players = relationship("PlayerModel", secondary=player_teams, back_populates="teams")

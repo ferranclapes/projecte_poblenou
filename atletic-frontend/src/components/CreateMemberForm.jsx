@@ -36,13 +36,17 @@ function CreateMemberForm({onMemberCreated, logo, onOpenMenu}) {
         setRole(newRole);
         if (newRole === 'jugador' && teams.length > 1) {
             // Si passa a jugador i en tenia molts, deixem només el primer
-            setSelectedTeam([teams[0]]);
+            setSelectedTeam([teams[0].id]);
         }
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
         setErrorMessage('');
+
+        const formattedTeamIds = role === 'jugador'
+            ? [Number(selectedTeam)]
+            : teams.map(t => t.id);
 
         const payload = {
             name: name,
@@ -57,7 +61,7 @@ function CreateMemberForm({onMemberCreated, logo, onOpenMenu}) {
 
             role: role,
 
-            team_ids: role === 'jugador' ? [selectedTeam] : teams.map(t => t.id),
+            team_ids: formattedTeamIds,
 
             password: preferedName+surname1
         }

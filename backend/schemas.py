@@ -29,7 +29,7 @@ class PlayerBase(BaseModel):
     pronouns: Optional[models.PronounsEnum] = None
 
     #club: Optional[str] = None
-    teams_id: Optional[List[str]] = None
+    team_ids: Optional[List[int]] = None
     sex: models.SexEnum
     main_position: models.PositionEnum
     secondary_position: Optional[models.PositionEnum] = None

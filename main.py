@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends
 from typing import List
 from sqlalchemy import text
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from backend.database import engine, Base, get_db
 import backend.models as models
@@ -47,8 +47,8 @@ def create_player(player: schemas.CreatePlayer, db: Session = Depends(get_db), c
        raise HTTPException(status_code=400, detail="Ja existeix un jugador amb aquest nom.")
     
     plain_password = str(player.password)
-
     hashed_password = auth.get_password_hash(plain_password)
+
     if player.prefered_name is None:
         player.prefered_name = player.name
 
@@ -70,50 +70,23 @@ def create_player(player: schemas.CreatePlayer, db: Session = Depends(get_db), c
         hashed_password=hashed_password,
         is_admin = True if player.role == models.UserRoleEnum.COACH.value else False
     )
+
+    if player.team_ids:
+        teams = db.query(models.TeamModel).filter(models.TeamModel.id.in_(player.team_ids)).all()
+        db_player.teams = teams
+                
     db.add(db_player)
     db.commit()
     db.refresh(db_player)
-
-    if player.teams_id:
-        for team_id in player.teams_id:
-            db.execute(
-                text("INSERT INTO player_teams (player_id, team_id) VALUES (:p_id, :t_id)"),
-                {"p_id": db_player.id, "t_id": team_id}
-            )
-        db.commit()
 
     return db_player
 
 @app.get("/players", response_model=List[schemas.PlayerResponse])
 def list_players(db: Session = Depends(get_db)):
-    # 1. Obtenim tots els jugadors
-    query_players = text("""
-        SELECT id, username, name, surname1, surname2, prefered_name, 
-        pronouns, sex, main_position, secondary_position, role, is_admin
-        FROM players
-        ORDER BY name ASC
-    """)
-    players_result = db.execute(query_players).mappings().all()
-    
-    players_list = []
-    
-    # 2. Per a cada jugador, busquem els seus equips a la taula intermèdia
-    for p in players_result:
-        player_dict = dict(p)
-        
-        query_teams = text("""
-            SELECT t.id, t.name, t.category
-            FROM teams t
-            INNER JOIN player_teams pt ON t.id = pt.team_id
-            WHERE pt.player_id = :p_id
-        """)
-        teams_result = db.execute(query_teams, {"p_id": player_dict["id"]}).mappings().all()
-        
-        # Afegim la llista d'equips (ex: [{'id': 1, 'name': 'Sènior A'}, ...])
-        player_dict["teams"] = [dict(t) for t in teams_result]
-        players_list.append(player_dict)
-
-    return players_list
+    players = db.query(models.PlayerModel).options(
+        selectinload(models.PlayerModel.teams)
+    ).order_by(models.PlayerModel.name.asc()).all()
+    return players
 
 @app.get("/players/{player_id}", response_model=schemas.PlayerResponse)
 def get_player(player_id: int, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
@@ -419,3 +392,16 @@ def list_teams(db: Session = Depends(get_db)):
     query = text("SELECT * FROM teams ORDER BY name ASC")
     result = db.execute(query)
     return [dict(row._mapping) for row in result]
+
+# --- 7. UTILS ---
+@app.get("/utils/positions")
+def get_positions():
+    return [{"label": position.value, "value": position.value} for position in models.PositionEnum]
+
+@app.get("/utils/roles")
+def get_roles():
+    return [{"label": role.value, "value": role.value} for role in models.UserRoleEnum]
+
+@app.get("/utils/sexes")
+def get_sexes():
+    return [{"label": sex.value, "value": sex.value} for sex in models.SexEnum]

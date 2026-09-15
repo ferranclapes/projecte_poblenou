@@ -324,6 +324,15 @@ export const theme = {
         padding: '10px',
         borderBottom: '1px solid #888888'
     },
+    teamSummary_group_expand_button: {
+        background: 'transparent',
+        border: 'none',
+        color: '#000000',
+        fontSize: '14px',
+        cursor: 'pointer',
+        marginTop: '5px',
+        fontWeight: 'bold',
+    },
     teamSummary_player_expand_button: {
         background: 'transparent',
         border: 'none',
@@ -360,7 +369,13 @@ export const theme = {
         width: '100%'
     },
     teamSummary_select_input_option: {
-        fontSize: '9px'
+        maxWidth: '220px',
+        padding: '6px 10px',
+        borderRadius: '6px',
+        border: '1pers solid #ccc',
+        backgroundColor: '#fff',
+        fontSize: '14px',
+        boxSizing: 'border-box',
     },
 
     /*==================================================
