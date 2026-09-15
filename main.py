@@ -394,14 +394,11 @@ def list_teams(db: Session = Depends(get_db)):
     return [dict(row._mapping) for row in result]
 
 # --- 7. UTILS ---
-@app.get("/utils/positions")
-def get_positions():
-    return [{"label": position.value, "value": position.value} for position in models.PositionEnum]
-
-@app.get("/utils/roles")
-def get_roles():
-    return [{"label": role.value, "value": role.value} for role in models.UserRoleEnum]
-
-@app.get("/utils/sexes")
-def get_sexes():
-    return [{"label": sex.value, "value": sex.value} for sex in models.SexEnum]
+@app.get("/utils/enums")
+def get_enums():
+    return {
+        "positions": [{"label": position.value, "value": position.value} for position in models.PositionEnum],
+        "roles": [{"label": role.value, "value": role.value} for role in models.UserRoleEnum],
+        "sexes": [{"label": sex.value, "value": sex.value} for sex in models.SexEnum],
+        "pronouns": [{"label": pronoun.value, "value": pronoun.value} for pronoun in models.PronounsEnum]
+    }

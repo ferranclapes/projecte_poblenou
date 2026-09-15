@@ -51,19 +51,13 @@ function TeamSummary({logo, onOpenMenu}) {
     useEffect(() => {
         fetchPlayers();
         fetchTeams();
-        axios.get('http://127.0.0.1:8000/utils/positions')
+        axios.get('http://127.0.0.1:8000/utils/enums')
             .then(response => {
-                setPositions(response.data);
+                setPositions(response.data.positions);
+                setRoles(response.data.roles);
             })
             .catch(error => {
-                console.error('Error carregant posicions:', error);
-            });
-        axios.get('http://127.0.0.1:8000/utils/roles')
-            .then(response => {
-                setRoles(response.data);
-            })
-            .catch(error => {
-                console.error('Error carregant rols:', error);
+                console.error('Error fetching enums:', error);
             });
     }, []);
 

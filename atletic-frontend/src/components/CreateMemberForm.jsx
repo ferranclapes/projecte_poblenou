@@ -19,6 +19,11 @@ function CreateMemberForm({onMemberCreated, logo, onOpenMenu}) {
     const [teams, setTeams] = useState([]);
     const [selectedTeam, setSelectedTeam] = useState('');
 
+    const [positions, setPositions] = useState([]);
+    const [pronounsOptions, setPronounsOptions] = useState([]);
+    const [sexOptions, setSexOptions] = useState([]);
+    const [roles, setRoles] = useState([]);
+
     useEffect(() => {
     const token = localStorage.getItem('token');
     axios.get('http://127.0.0.1:8000/teams', {
@@ -31,6 +36,23 @@ function CreateMemberForm({onMemberCreated, logo, onOpenMenu}) {
         }
         })
     .catch(error => console.error("Error al obtenir els equips:", error));
+
+    axios.get('http://127.0.0.1:8000/utils/positions', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(response => setPositions(response.data))
+    .catch(error => console.error("Error al obtenir les posicions:", error));
+
+    axios.get('http://127.0.0.1:8000/utils/enums', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(response => {
+        setPronounsOptions(response.data.pronouns);
+        setSexOptions(response.data.sexes);
+        setRoles(response.data.roles);
+        setPositions(response.data.positions);
+    })
+    .catch(error => console.error("Error al obtenir els enums:", error));
   }, []);
   const handleRoleChange = (newRole) => {
         setRole(newRole);
@@ -140,10 +162,11 @@ function CreateMemberForm({onMemberCreated, logo, onOpenMenu}) {
                     <div>
                         <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '12px', color: '#333' }}>Pronoms</label>
                         <select value={pronouns} onChange={(e) => setPronouns(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc' }}>
-                            <option value="Ell">Ell</option>
-                            <option value="Elle">Ella</option>
-                            <option value="Els">Elle</option>
-                            <option value="Altres">Altres</option>
+                            {pronounsOptions.map(pronoun => (
+                                <option key={pronoun.value} value={pronoun.value}>
+                                    {pronoun.label}
+                                </option>
+                            ))}
                         </select>
                     </div>
                 </div>
@@ -153,8 +176,11 @@ function CreateMemberForm({onMemberCreated, logo, onOpenMenu}) {
                 <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '12px', color: '#333' }}>Rol</label>
                 <div style={{ display: 'flex', gap: '10px', justifyContent: 'center'}}>
                     <select value={role} onChange={(e) => handleRoleChange(e.target.value)} style={{ width: '50%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc', marginBottom: '10px' }}>
-                        <option value="jugador">Jugador/a</option>
-                        <option value="entrenador">Entrenador/a</option>
+                        {roles.map(roleOption => (
+                            <option key={roleOption.value} value={roleOption.value}>
+                                {roleOption.label}
+                            </option>
+                        ))}
                     </select>
                 </div>
 
@@ -173,29 +199,33 @@ function CreateMemberForm({onMemberCreated, logo, onOpenMenu}) {
                         <div>
                             <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '12px', color: '#333' }}>Sexe</label>
                             <select value={sex} onChange={(e) => setSex(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc' }}>
-                            <option value="Home">Home</option>
-                            <option value="Dona">Dona</option>
+                                {sexOptions.map(sexOption => (
+                                    <option key={sexOption.value} value={sexOption.value}>
+                                        {sexOption.label}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                         <div>
                             <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '12px', color: '#333' }}>Posició</label>
                             <select value={mainPosition} onChange={(e) => setMainPosition(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc' }}>
-                            <option value="Central">Central</option>
-                            <option value="Punta">Punta</option>
-                            <option value="Oposat">Oposat</option>
-                            <option value="Col·locador">Col·locador</option>
-                            <option value="Líbero">Líbero</option>
+                                {positions
+                                .filter(position => position.value !== '-')
+                                .map(position => (
+                                    <option key={position.value} value={position.value}>
+                                        {position.label}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                         <div>
                             <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '12px', color: '#333' }}>Posició secundària</label>
                             <select value={secondaryPosition} onChange={(e) => setSecondaryPosition(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc' }}>
-                            <option value="-">-</option>
-                            <option value="Central">Central</option>
-                            <option value="Punta">Punta</option>
-                            <option value="Oposat">Oposat</option>
-                            <option value="Col·locador">Col·locador</option>
-                            <option value="Líbero">Líbero</option>
+                                {positions.map(position => (
+                                    <option key={position.value} value={position.value}>
+                                        {position.label}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                     </div>
