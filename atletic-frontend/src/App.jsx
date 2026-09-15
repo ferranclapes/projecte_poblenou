@@ -12,6 +12,7 @@ import Calendar from './components/Calendar';
 import SideMenu from './components/SideMenu';
 import CreateMemberForm from './components/CreateMemberForm';
 import UserView from './components/UserView';
+import UserSearcher from './components/UserSearcher';
 
 import logo from '../assets/logo-atletic.png';
 
@@ -35,6 +36,7 @@ function App() {
 
   const [isCreateMemberFormVisible, setIsCreateMemberFormVisible] = useState(false);
   const [isUserViewVisible, setIsUserViewVisible] = useState(false);
+  const [isUserSearcherVisible, setIsUserSearcherVisible] = useState(false);
 
   const handleLoginSuccess = () => {
     setIsMenuOpen(false);
@@ -79,6 +81,7 @@ function App() {
     setIsCreateMemberFormVisible(false);
     setIsMenuOpen(false);
     setIsUserViewVisible(false);
+    setIsUserSearcherVisible(false);
   };
   
   const handleViewMainPage = () => {
@@ -86,6 +89,7 @@ function App() {
     setIsCreateMemberFormVisible(false);
     setIsMenuOpen(false);
     setIsUserViewVisible(false);
+    setIsUserSearcherVisible(false);
   }
 
   const handleCreateNewMember = () => {
@@ -93,6 +97,7 @@ function App() {
     setIsTeamSummaryVisible(false);
     setIsMenuOpen(false);
     setIsUserViewVisible(false);
+    setIsUserSearcherVisible(false);
   }
 
   const handleViewUsuari = () => {
@@ -100,8 +105,16 @@ function App() {
     setIsTeamSummaryVisible(false);
     setIsMenuOpen(false);
     setIsUserViewVisible(true);
+    setIsUserSearcherVisible(false);
   }
 
+  const handleViewUserSearcher = () => {
+    setIsCreateMemberFormVisible(false);
+    setIsTeamSummaryVisible(false);
+    setIsMenuOpen(false);
+    setIsUserViewVisible(false);
+    setIsUserSearcherVisible(true);
+  }
 
   //======================================================================================
   // RENDERING LOGIC
@@ -127,6 +140,7 @@ function App() {
         onLogout={handleLogout}
         onViewMainPage={handleViewMainPage}
         onViewTeamSummary={handleViewTeamSummary}
+        onViewUserSearcher={handleViewUserSearcher}
         onCreateNewMember={handleCreateNewMember}
         onViewUsuari={handleViewUsuari}
       />
@@ -139,6 +153,28 @@ function App() {
       );
   }
 
+  //* SHOW USER SEARCHER IF USER WANTS TO SEE IT
+  if (isUserSearcherVisible) {
+    return (
+      <div style={theme.background}>
+        <SideMenu 
+          isOpen={isMenuOpen}
+          onClose={() => setIsMenuOpen(false)}
+          onLogout={handleLogout}
+          onViewMainPage={handleViewMainPage}
+          onViewTeamSummary={handleViewTeamSummary}
+          onViewUserSearcher={handleViewUserSearcher}
+          onCreateNewMember={handleCreateNewMember}
+          onViewUsuari={handleViewUsuari}
+        />
+        <UserSearcher 
+          logo={logo}
+          onOpenMenu={() => setIsMenuOpen(true)}
+         />
+      </div>
+    );
+  }
+
   //* SHOW CREATE MEMBER FORM IF USER WANTS TO SEE IT
   if (isCreateMemberFormVisible) {
     return (
@@ -149,6 +185,7 @@ function App() {
           onLogout={handleLogout}
           onViewMainPage={handleViewMainPage}
           onViewTeamSummary={handleViewTeamSummary}
+          onViewUserSearcher={handleViewUserSearcher}
           onCreateNewMember={handleCreateNewMember}
           onViewUsuari={handleViewUsuari}
         />
@@ -171,6 +208,7 @@ function App() {
           onLogout={handleLogout}
           onViewMainPage={handleViewMainPage}
           onViewTeamSummary={handleViewTeamSummary}
+          onViewUserSearcher={handleViewUserSearcher}
           onCreateNewMember={handleCreateNewMember}
           onViewUsuari={handleViewUsuari}
         />
@@ -181,6 +219,9 @@ function App() {
       </div>
     );
   }
+
+
+
   //* SHOW EVENT SUMMARY IF AN EVENT IS SELECTED
   if (currentEventId !== null) {
     return (<EventSummary eventId={currentEventId} onBack={() => setCurrentEventId(null)}/>);
@@ -203,6 +244,7 @@ function App() {
         onViewMainPage={handleViewMainPage}
         onViewTeamSummary={handleViewTeamSummary}
         onCreateNewMember={handleCreateNewMember}
+        onViewUserSearcher={handleViewUserSearcher}
         onViewUsuari={handleViewUsuari}
       />
 

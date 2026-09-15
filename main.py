@@ -99,7 +99,7 @@ def get_player(player_id: int, db: Session = Depends(get_db), current_user: dict
     return player
 
 @app.patch("/players/{player_id}")
-def update_player_pprofile(player_id: int, player_data: dict, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+def update_player_profile(player_id: int, player_data: dict, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
     if current_user['role'] != models.UserRoleEnum.COACH.value and current_user['is_admin'] != True and current_user['id'] != player_id:
         raise HTTPException(status_code=403, detail="Només els coaches i els administradors poden actualitzar el perfil.")
 
@@ -171,6 +171,38 @@ def change_password(player_id: int, password_data: schemas.ChangePasswordRequest
     db.commit()
 
     return {"status": "success", "message": "Contrasenya canviada correctament"}
+
+@app.post("/players/{player_id}/reset-password")
+def reset_password(player_id: int, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+    if current_user['is_admin'] != True:
+        raise HTTPException(status_code=403, detail="Només els administradors poden reiniciar la contrasenya d'un jugador.")
+
+    db_player = db.query(models.PlayerModel).filter(models.PlayerModel.id == player_id).first()
+    if not db_player:
+        raise HTTPException(status_code=404, detail="Jugador no trobat")
+
+    # Reset password to prefered_name or name if prefered_name is empty
+    new_password = db_player.prefered_name+db_player.surname1 if db_player.prefered_name else db_player.name+db_player.surname1
+    new_hashed_password = auth.get_password_hash(new_password)
+    db_player.hashed_password = new_hashed_password
+    db.commit()
+
+    return {"status": "success", "message": f"Contrasenya reiniciada correctament. La nova contrassenya temporal és: '{new_password}'."}
+
+@app.delete("/players/{player_id}")
+def delete_player(player_id: int, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+    if current_user['is_admin'] != True:
+        raise HTTPException(status_code=403, detail="Només els administradors poden eliminar jugadors.")
+
+    player = db.query(models.PlayerModel).filter(models.PlayerModel.id == player_id).first()
+    if not player:
+        raise HTTPException(status_code=404, detail="Jugador no trobat")
+
+    db.execute(text("DELETE FROM player_teams WHERE player_id = :p_id"), {"p_id": player_id})
+    
+    db.delete(player)
+    db.commit()
+    return {"status": "success", "message": f"Jugador {player_id} eliminat correctament"}
 
 # --- 2. EVENT ---
 @app.post("/events", status_code=201)
