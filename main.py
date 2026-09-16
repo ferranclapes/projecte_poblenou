@@ -1,7 +1,7 @@
 from dateutil.relativedelta import relativedelta
 from datetime import timedelta
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request, Response
 from typing import List
 from sqlalchemy import text
 from sqlalchemy.orm import Session, selectinload
@@ -27,11 +27,33 @@ origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origins_regex=r"https://.*\.projecte-poblenou\.pages\.dev",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def add_cors_header(request: Request, call_next):
+    origin = request.headers.get("origin")
+    
+    # Comprovem si la petició ve de Cloudflare Pages
+    if origin and origin.endswith(".projecte-poblenou.pages.dev"):
+        if request.method == "OPTIONS":
+            # Resposta ràpida per a les peticions prèvies (preflight)
+            response = Response()
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Allow-Methods"] = "*"
+            response.headers["Access-Control-Allow-Headers"] = "*"
+            return response
+            
+        response = await call_next(request)
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        return response
+
+    response = await call_next(request)
+    return response
 
 
 
