@@ -27,7 +27,7 @@ origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origins_regex=r"https://([a-z0-9-]+)\.projecte-poblenou\.pages\.dev",
+    allow_origins_regex=r"https://.*\.projecte-poblenou\.pages\.dev",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
