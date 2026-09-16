@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { theme } from '../styles.js';
+import API_URL from '../services/api.js';
 
 import PasswordForm from './PasswordForm.jsx';
 
@@ -15,7 +16,7 @@ function UserView({ logo, onOpenMenu}) {
         const userId = localStorage.getItem('user_id');
 
         if (userId) {
-            axios.get(`http://127.0.0.1:8000/players/${userId}`, {
+            axios.get(`${API_URL}/players/${userId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
             .then(response => setPlayer(response.data))
@@ -33,7 +34,7 @@ function UserView({ logo, onOpenMenu}) {
         const userId = localStorage.getItem('user_id');
         const payload = { [editingCell]: editValue };
 
-        axios.patch(`http://127.0.0.1:8000/players/${userId}`, payload, {
+        axios.patch(`${API_URL}/players/${userId}`, payload, {
             headers: {
                 'Authorization': `Bearer ` + token
             }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { theme } from '../styles.js';
+import API_URL from '../services/api.js';
 
 function PasswordForm({onCancel}) {
     const [currentPassword, setCurrentPassword] = useState('');
@@ -29,7 +30,7 @@ function PasswordForm({onCancel}) {
             new_password: newPassword
         }
 
-        axios.post(`http://127.0.0.1:8000/players/${userId}/change-password`, payload, {
+        axios.post(`${API_URL}/players/${userId}/change-password`, payload, {
         headers: {
             'Authorization': `Bearer ${token}`
         }

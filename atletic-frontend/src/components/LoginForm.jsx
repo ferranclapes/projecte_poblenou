@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import API_URL from '../services/api.js';
 
 function LoginForm({ onLoginSuccess }) {
     const [name, setName] = useState('');
@@ -14,7 +15,7 @@ function LoginForm({ onLoginSuccess }) {
 
         const username =`${name.toLowerCase()}_${surname1.toLowerCase()}_${surname2.toLowerCase()}`;
 
-        axios.post('http://127.0.0.1:8000/auth/login', { username, password })
+        axios.post(`${API_URL}/auth/login`, { username, password })
         .then(response => {
             const data = response.data;
 

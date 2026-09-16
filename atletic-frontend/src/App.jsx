@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import {theme} from './styles.js';
+import API_URL from './services/api.js';
 
 import EventSummary from './components/EventSummary';
 import EventForm from './components/EventForm';
@@ -53,7 +54,7 @@ function App() {
 
   const fetchEvents = useCallback(() => {
     const token = localStorage.getItem('token');
-    axios.get('http://127.0.0.1:8000/events',{
+    axios.get(`${API_URL}/events`,{
       headers: {Authorization: `Bearer ${token}`}
     })
     .then(response => setEvents(response.data))

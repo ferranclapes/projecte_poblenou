@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { theme } from '../styles.js';
+import API_URL from '../services/api.js';
 
 
 function TeamSummary({logo, onOpenMenu}) {
@@ -27,7 +28,7 @@ function TeamSummary({logo, onOpenMenu}) {
     };
 
     const fetchPlayers = () => {
-        axios.get('http://127.0.0.1:8000/players')
+        axios.get(`${API_URL}/players`)
         .then(response => {
             setPlayers(response.data);
             setLoading(false);
@@ -39,7 +40,7 @@ function TeamSummary({logo, onOpenMenu}) {
     }
 
     const fetchTeams = () => {
-        axios.get('http://127.0.0.1:8000/teams')
+        axios.get(`${API_URL}/teams`)
             .then(response => {
                 setAvailableTeams(response.data);
             })
@@ -51,7 +52,7 @@ function TeamSummary({logo, onOpenMenu}) {
     useEffect(() => {
         fetchPlayers();
         fetchTeams();
-        axios.get('http://127.0.0.1:8000/utils/enums')
+        axios.get(`${API_URL}/utils/enums`)
             .then(response => {
                 setPositions(response.data.positions);
                 setRoles(response.data.roles);
@@ -75,7 +76,7 @@ function TeamSummary({logo, onOpenMenu}) {
         const { field } = editingCell;
 
         if (field === 'teams') {
-            axios.put(`http://127.0.0.1:8000/players/${playerId}/teams`, { team_ids: editValue }, {
+            axios.put(`${API_URL}/players/${playerId}/teams`, { team_ids: editValue }, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -93,7 +94,7 @@ function TeamSummary({logo, onOpenMenu}) {
         let payload = {};
         payload[field] = editValue;
 
-        axios.patch(`http://127.0.0.1:8000/players/${playerId}`, payload, {
+        axios.patch(`${API_URL}/players/${playerId}`, payload, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -110,7 +111,7 @@ function TeamSummary({logo, onOpenMenu}) {
     const saveFieldUpdateWithCustomValue = (playerId, customTeamsArray) => {
         const token = localStorage.getItem('token');
         
-        axios.put(`http://127.0.0.1:8000/players/${playerId}/teams`, { team_ids: customTeamsArray }, {
+        axios.put(`${API_URL}/players/${playerId}/teams`, { team_ids: customTeamsArray }, {
             headers: { 'Authorization': `Bearer ${token}` }
         })
         .then(() => {

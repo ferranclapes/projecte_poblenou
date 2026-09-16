@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { theme } from '../styles.js';
+import API_URL from '../services/api.js';
 
 function UserSearcher({logo, onOpenMenu}) {
     const [users, setUsers] = useState([]);
@@ -10,7 +11,7 @@ function UserSearcher({logo, onOpenMenu}) {
 
     useEffect(() => {
         const token = localStorage.getItem('token');
-        axios.get('http://localhost:8000/players', {
+        axios.get(`${API_URL}/players`, {
             headers: {'Authorization': `Bearer ${token}`}
         })
         .then(response => {
@@ -93,7 +94,7 @@ function UserSearcher({logo, onOpenMenu}) {
                                         <button style={{...theme.btnSecondary, marginTop: '8px'}} onClick={() => {
                                             if (window.confirm(`Segur que vols reiniciar la contrasenya de ${displayName}?`)) {
                                                 const token = localStorage.getItem('token');
-                                                axios.post(`http://localhost:8000/players/${player.id}/reset-password`, {}, {
+                                                axios.post(`${API_URL}/players/${player.id}/reset-password`, {}, {
                                                     headers: {'Authorization': `Bearer ${token}`}
                                                 })
                                                 .then(response => {
@@ -110,7 +111,7 @@ function UserSearcher({logo, onOpenMenu}) {
                                         <button style={{...theme.btnSecondary, marginTop: '8px', marginLeft: '8px'}} onClick={() => {
                                             if (window.confirm(`Segur que vols eliminar el jugador ${displayName}?`)) {
                                                 const token = localStorage.getItem('token');
-                                                axios.delete(`http://localhost:8000/players/${player.id}`, {
+                                                axios.delete(`${API_URL}/players/${player.id}`, {
                                                     headers: {'Authorization': `Bearer ${token}`}
                                                 })
                                                 .then(response => {

@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import API_URL from '../services/api.js';
 
 function EventSummary({ eventId, onBack }) {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`http://127.0.0.1:8000/events/${eventId}/summary`)
+    axios.get(`${API_URL}/events/${eventId}/summary`)
       .then(res => {
         setSummary(res.data);
         setLoading(false);

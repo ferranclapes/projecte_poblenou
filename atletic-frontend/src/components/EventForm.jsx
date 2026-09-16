@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { theme } from '../styles.js';
+import API_URL from '../services/api.js';
 
 function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
 
@@ -19,7 +20,7 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    axios.get('http://127.0.0.1:8000/teams', {
+    axios.get(`${API_URL}/teams`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     .then(response => setTeams(response.data))
@@ -61,7 +62,7 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
     }
 
     if (editingEvent) {
-      axios.put(`http://127.0.0.1:8000/events/${editingEvent.id}`, payload, config)
+      axios.put(`${API_URL}/events/${editingEvent.id}`, payload, config)
         .then(() => {
           alert("✏️ Convocatòria actualitzada correctament!");
           resetForm();
@@ -69,7 +70,7 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
         })
         .catch(error => console.error("Error al editar:", error));
     } else {
-      axios.post('http://127.0.0.1:8000/events', payload, config)
+      axios.post(`${API_URL}/events`, payload, config)
         .then(() => {
           alert("🎉 Convocatòria creada correctament!");
           resetForm();
@@ -83,7 +84,7 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
     e.stopPropagation();
     if (window.confirm("⚠️ Segur que vols eliminar aquesta convocatòria? Es borraran totes les assistències.")) {
       const token = localStorage.getItem('token');
-      axios.delete(`http://127.0.0.1:8000/events/${editingEvent.id}`, {
+      axios.delete(`${API_URL}/events/${editingEvent.id}`, {
         headers: {Authorization: `Bearer ${token}`}
       })
       .then(() => {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { theme } from '../styles.js';
+import API_URL from '../services/api.js';
 
 function CreateMemberForm({onMemberCreated, logo, onOpenMenu}) {
     const [name, setName] = useState('');
@@ -26,7 +27,7 @@ function CreateMemberForm({onMemberCreated, logo, onOpenMenu}) {
 
     useEffect(() => {
     const token = localStorage.getItem('token');
-    axios.get('http://127.0.0.1:8000/teams', {
+    axios.get(`${API_URL}/teams`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     .then(response => {
@@ -37,13 +38,13 @@ function CreateMemberForm({onMemberCreated, logo, onOpenMenu}) {
         })
     .catch(error => console.error("Error al obtenir els equips:", error));
 
-    axios.get('http://127.0.0.1:8000/utils/positions', {
+    axios.get(`${API_URL}/utils/positions`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     .then(response => setPositions(response.data))
     .catch(error => console.error("Error al obtenir les posicions:", error));
 
-    axios.get('http://127.0.0.1:8000/utils/enums', {
+    axios.get(`${API_URL}/utils/enums`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     .then(response => {
@@ -88,7 +89,7 @@ function CreateMemberForm({onMemberCreated, logo, onOpenMenu}) {
             password: preferedName === '' ? name+surname1 : preferedName+surname1,
         }
 
-        axios.post('http://127.0.0.1:8000/players', payload,{
+        axios.post(`${API_URL}/players`, payload,{
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}`
             }
         })

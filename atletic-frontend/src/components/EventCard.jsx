@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import {theme} from '../styles.js';
+import API_URL from '../services/api.js';
 
 function EventCard({event, onClickEvent, onEdit, onRefreshEvents}) {
   const [assistance, setAssistance] = useState(null);
@@ -20,7 +21,7 @@ function EventCard({event, onClickEvent, onEdit, onRefreshEvents}) {
       comment: ""
     };
 
-    axios.post(`http://127.0.0.1:8000/events/${event.id}/assistances`, payload)
+    axios.post(`${API_URL}/events/${event.id}/assistances`, payload)
     .then(() => {
       alert(`S'ha registrat la teva assistència: ${status}`);
       setAssistance(status);
