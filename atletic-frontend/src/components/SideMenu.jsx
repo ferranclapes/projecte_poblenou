@@ -1,6 +1,6 @@
 import {theme} from '../styles.js';
 
-function SideMenu({ isOpen, onClose, onLogout, onViewMainPage, onViewTeamSummary }) {
+function SideMenu({ isOpen, onClose, onLogout, onViewMainPage, onViewTeamSummary, onViewUserSearcher, onCreateNewMember, onViewUsuari }) {
   // Si no està obert, directament no dibuixem res a la pantalla (retornem null)
     const transformStyle = isOpen ? 'translateX(0)' : 'translateX(-290px)';
 
@@ -22,7 +22,18 @@ function SideMenu({ isOpen, onClose, onLogout, onViewMainPage, onViewTeamSummary
             Pantalla principal
             </button>
             <button style= {theme.sideMenu_button} onClick={onViewTeamSummary}>
-            Resum d'Equip
+            Resum d'equip
+            </button>
+            <button style= {theme.sideMenu_button} onClick={onViewUserSearcher}>
+            Cercar usuaris
+            </button>
+            {localStorage.getItem('is_admin') === 'true' && (
+              <button style= {theme.sideMenu_button} onClick={onCreateNewMember}>
+              Crear nou  membre
+              </button>
+            )}
+            <button style= {theme.sideMenu_button} onClick={onViewUsuari}>
+            Perfil d'usuari
             </button>
             <button style= {theme.sideMenu_button} onClick={onLogout}>
             Tancar sessió

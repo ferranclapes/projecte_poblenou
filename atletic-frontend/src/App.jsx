@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/';
 import {theme} from './styles.js';
+import API_URL from './services/api.js';
 
 import EventSummary from './components/EventSummary';
 import EventForm from './components/EventForm';
@@ -11,6 +12,9 @@ import TeamSummary from './components/TeamSummary';
 import EventCard from './components/EventCard';
 import Calendar from './components/Calendar';
 import SideMenu from './components/SideMenu';
+import CreateMemberForm from './components/CreateMemberForm';
+import UserView from './components/UserView';
+import UserSearcher from './components/UserSearcher';
 
 import logo from '../assets/logo-atletic.png';
 
@@ -27,10 +31,14 @@ function App() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [isTeamSummaryVisible, setIsTeamSummaryVisible] = useState(false);
 
-  const [preferedName, setPreferedName] = useState(() => {return localStorage.getItem('prefered_name') || ''});
+  const [preferedName, setPreferedName] = useState(() => {return localStorage.getItem('prefered_name') || localStorage.getItem('name') || ''});
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isFormVisible, setIsFormVisible] = useState(false);
+
+  const [isCreateMemberFormVisible, setIsCreateMemberFormVisible] = useState(false);
+  const [isUserViewVisible, setIsUserViewVisible] = useState(false);
+  const [isUserSearcherVisible, setIsUserSearcherVisible] = useState(false);
 
   const handleLoginSuccess = () => {
     setIsMenuOpen(false);
@@ -47,7 +55,7 @@ function App() {
 
   const fetchEvents = useCallback(() => {
     const token = localStorage.getItem('token');
-    axios.get(`${API_URL}events/`,{
+    axios.get(`${API_URL}/events`,{
       headers: {Authorization: `Bearer ${token}`}
     })
     .then(response => setEvents(response.data))
@@ -66,6 +74,49 @@ function App() {
     }
   }, [isLoggedIn, fetchEvents]);
 
+  //======================================================================================
+  // MENU HANDLERS
+  //======================================================================================
+
+  const handleViewTeamSummary = () => {
+    setIsTeamSummaryVisible(true);
+    setIsCreateMemberFormVisible(false);
+    setIsMenuOpen(false);
+    setIsUserViewVisible(false);
+    setIsUserSearcherVisible(false);
+  };
+  
+  const handleViewMainPage = () => {
+    setIsTeamSummaryVisible(false);
+    setIsCreateMemberFormVisible(false);
+    setIsMenuOpen(false);
+    setIsUserViewVisible(false);
+    setIsUserSearcherVisible(false);
+  }
+
+  const handleCreateNewMember = () => {
+    setIsCreateMemberFormVisible(true);
+    setIsTeamSummaryVisible(false);
+    setIsMenuOpen(false);
+    setIsUserViewVisible(false);
+    setIsUserSearcherVisible(false);
+  }
+
+  const handleViewUsuari = () => {
+    setIsCreateMemberFormVisible(false);
+    setIsTeamSummaryVisible(false);
+    setIsMenuOpen(false);
+    setIsUserViewVisible(true);
+    setIsUserSearcherVisible(false);
+  }
+
+  const handleViewUserSearcher = () => {
+    setIsCreateMemberFormVisible(false);
+    setIsTeamSummaryVisible(false);
+    setIsMenuOpen(false);
+    setIsUserViewVisible(false);
+    setIsUserSearcherVisible(true);
+  }
 
   //======================================================================================
   // RENDERING LOGIC
@@ -75,7 +126,7 @@ function App() {
   if (!isLoggedIn) {
     if (isRegistering) {
       return (
-        <RegisterForm onCancel={() => setIsRegistering(false)} onRegisterSuccess={() => setIsRegistering(false)} />
+        <RegisterForm onCancel={() => setIsRegistering(false)} />
       );
     }
     return <LoginForm onLoginSuccess={handleLoginSuccess} onGoToRegister={() => setIsRegistering(true)} />;
@@ -89,8 +140,11 @@ function App() {
         isOpen={isMenuOpen} 
         onClose={() => setIsMenuOpen(false)}
         onLogout={handleLogout}
-        onViewMainPage={() => {setIsTeamSummaryVisible(false); setIsMenuOpen(false);}}
-        onViewTeamSummary={() => {setIsTeamSummaryVisible(true); setIsMenuOpen(false);}}
+        onViewMainPage={handleViewMainPage}
+        onViewTeamSummary={handleViewTeamSummary}
+        onViewUserSearcher={handleViewUserSearcher}
+        onCreateNewMember={handleCreateNewMember}
+        onViewUsuari={handleViewUsuari}
       />
 
       <TeamSummary 
@@ -100,6 +154,75 @@ function App() {
     </div>
       );
   }
+
+  //* SHOW USER SEARCHER IF USER WANTS TO SEE IT
+  if (isUserSearcherVisible) {
+    return (
+      <div style={theme.background}>
+        <SideMenu 
+          isOpen={isMenuOpen}
+          onClose={() => setIsMenuOpen(false)}
+          onLogout={handleLogout}
+          onViewMainPage={handleViewMainPage}
+          onViewTeamSummary={handleViewTeamSummary}
+          onViewUserSearcher={handleViewUserSearcher}
+          onCreateNewMember={handleCreateNewMember}
+          onViewUsuari={handleViewUsuari}
+        />
+        <UserSearcher 
+          logo={logo}
+          onOpenMenu={() => setIsMenuOpen(true)}
+         />
+      </div>
+    );
+  }
+
+  //* SHOW CREATE MEMBER FORM IF USER WANTS TO SEE IT
+  if (isCreateMemberFormVisible) {
+    return (
+      <div style={theme.background}>
+        <SideMenu 
+          isOpen={isMenuOpen}
+          onClose={() => setIsMenuOpen(false)}
+          onLogout={handleLogout}
+          onViewMainPage={handleViewMainPage}
+          onViewTeamSummary={handleViewTeamSummary}
+          onViewUserSearcher={handleViewUserSearcher}
+          onCreateNewMember={handleCreateNewMember}
+          onViewUsuari={handleViewUsuari}
+        />
+        <CreateMemberForm 
+          onMemberCreated={() => handleViewMainPage()}
+          logo={logo}
+          onOpenMenu={() => setIsMenuOpen(true)}
+         />
+      </div>
+    );
+  }
+
+  //* SHOW USER VIEW IF USER WANTS TO SEE IT
+  if (isUserViewVisible) {
+    return (
+      <div style={theme.background}>
+        <SideMenu 
+          isOpen={isMenuOpen}
+          onClose={() => setIsMenuOpen(false)}
+          onLogout={handleLogout}
+          onViewMainPage={handleViewMainPage}
+          onViewTeamSummary={handleViewTeamSummary}
+          onViewUserSearcher={handleViewUserSearcher}
+          onCreateNewMember={handleCreateNewMember}
+          onViewUsuari={handleViewUsuari}
+        />
+        <UserView 
+          logo={logo}
+          onOpenMenu={() => setIsMenuOpen(true)}
+         />
+      </div>
+    );
+  }
+
+
 
   //* SHOW EVENT SUMMARY IF AN EVENT IS SELECTED
   if (currentEventId !== null) {
@@ -120,8 +243,11 @@ function App() {
         isOpen={isMenuOpen} 
         onClose={() => setIsMenuOpen(false)}
         onLogout={handleLogout}
-        onViewMainPage={() => {setIsTeamSummaryVisible(false); setIsMenuOpen(false);}}
-        onViewTeamSummary={() => {setIsTeamSummaryVisible(true); setIsMenuOpen(false);}}
+        onViewMainPage={handleViewMainPage}
+        onViewTeamSummary={handleViewTeamSummary}
+        onCreateNewMember={handleCreateNewMember}
+        onViewUserSearcher={handleViewUserSearcher}
+        onViewUsuari={handleViewUsuari}
       />
 
       <div style={theme.headers_container}>
@@ -147,7 +273,7 @@ function App() {
       
       {/* 3. COMPONENT FORMULARI (Invocat de forma neta i modular) 📦 */}
       {localStorage.getItem('is_admin') === 'true' && (
-      <button onClick={() => setIsFormVisible(true)} style={theme.btnPrimary}>➕ Nova Convocatòria</button>
+      <button onClick={() => setIsFormVisible(true)} style={{...theme.btnPrimary, marginBottom: '10px'}}>➕ Nova Convocatòria</button>
       )}
       
       {localStorage.getItem('is_admin') === 'true' && (isFormVisible || editingEvent) && (

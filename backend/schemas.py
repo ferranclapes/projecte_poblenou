@@ -11,6 +11,16 @@ class LoginRequest(BaseModel):
     username: str
     password: str
 
+class TeamBase(BaseModel):
+    name: str
+    category: Optional[str] = None
+
+class TeamResponse(TeamBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
 class PlayerBase(BaseModel):
     name: str
     surname1: str
@@ -18,6 +28,8 @@ class PlayerBase(BaseModel):
     prefered_name: Optional[str] = None
     pronouns: Optional[models.PronounsEnum] = None
 
+    #club: Optional[str] = None
+    team_ids: Optional[List[int]] = None
     sex: models.SexEnum
     main_position: models.PositionEnum
     secondary_position: Optional[models.PositionEnum] = None
@@ -30,6 +42,7 @@ class CreatePlayer(PlayerBase):
 class PlayerResponse(PlayerBase):
     id: int
     is_admin: bool
+    teams: List[TeamResponse] = []
 
     class Config:
         from_attributes = True
@@ -44,6 +57,10 @@ class CreateEvent(BaseModel):
     date_time: datetime
     location: Optional[str] = None
     description: Optional[str] = None
+    team_ids: Optional[List[int]] = []
+    is_periodic: Optional[bool] = False
+    periodicity: Optional[str] = None
+    occurrences: Optional[int] = None
 
 class EventResponse(CreateEvent):
     id: int
@@ -52,3 +69,7 @@ class UpdateAssistance(BaseModel):
     player_id: int
     status: str
     comment: Optional[str] = None
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str

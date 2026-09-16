@@ -2,28 +2,10 @@ import { useState } from 'react';
 import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/';
 import {theme} from '../styles.js';
+import API_URL from '../services/api.js';
 
 function EventCard({event, onClickEvent, onEdit, onRefreshEvents}) {
   const [assistance, setAssistance] = useState(null);
-
-  //* Handle the deletion of an event
-  const handleDeleteEvent = (e) => {
-    e.stopPropagation();
-    if (window.confirm("⚠️ Segur que vols eliminar aquesta convocatòria? Es borraran totes les assistències.")) {
-      const token = localStorage.getItem('token');
-      axios.delete(`${API_URL}events/${event.id}`, {
-        headers: {Authorization: `Bearer ${token}`}
-      })
-      .then(() => {
-        alert("🗑️ Convocatòria eliminada correctament!");
-        onRefreshEvents;
-      })
-      .catch(error => {
-        console.error("Error al eliminar la convocatòria:", error);
-        alert("Hi ha hagut un error al eliminar la convocatòria.");
-      });
-    }
-  }
 
   //* Called when clicking an assistance button
   const handleVote = (status, e) => {
@@ -40,7 +22,7 @@ function EventCard({event, onClickEvent, onEdit, onRefreshEvents}) {
       comment: ""
     };
 
-    axios.post(`${API_URL}events/${event.id}/assistances/`, payload)
+    axios.post(`${API_URL}/events/${event.id}/assistances`, payload)
     .then(() => {
       alert(`S'ha registrat la teva assistència: ${status}`);
       setAssistance(status);
@@ -60,7 +42,6 @@ function EventCard({event, onClickEvent, onEdit, onRefreshEvents}) {
             {localStorage.getItem('is_admin') === 'true' && (
             <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
               <button onClick={onEdit} style={theme.edit_event_button} title="Editar">✏️</button>
-              <button onClick={(e) => handleDeleteEvent(e)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: 'var(--text)' }} title="Eliminar">🗑️</button>
             </div>
             )}
           </div>

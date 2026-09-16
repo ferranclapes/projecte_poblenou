@@ -1,6 +1,5 @@
-import sys
 from sqlalchemy.orm import Session
-from database import SessionLocal, engine
+from database import SessionLocal
 import models
 import auth
 
@@ -25,6 +24,7 @@ def create_admin():
 
         sex=models.SexEnum.FEMALE,
         main_position=models.PositionEnum.LIBERO,
+        secondary_position=models.PositionEnum.NONE,
 
         role=models.UserRoleEnum.PLAYER,
         is_admin=True,

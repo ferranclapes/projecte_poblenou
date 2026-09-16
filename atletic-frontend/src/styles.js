@@ -270,7 +270,7 @@ export const theme = {
     form_button_container: {
         display: 'flex',
         gap: '10px',
-        justifyContent: "flex-end",
+        justifyContent: "flex-start",
         marginTop: '10px'
     },
 
@@ -313,7 +313,8 @@ export const theme = {
         borderRadius: '10px 10px 10px 10px',
         padding: '10px 10px 20px',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        marginBottom: '15px',
     },
     teamSummary_player_continer: {
         display: 'flex',
@@ -322,6 +323,15 @@ export const theme = {
         alignItems: 'flex-start',
         padding: '10px',
         borderBottom: '1px solid #888888'
+    },
+    teamSummary_group_expand_button: {
+        background: 'transparent',
+        border: 'none',
+        color: '#000000',
+        fontSize: '14px',
+        cursor: 'pointer',
+        marginTop: '5px',
+        fontWeight: 'bold',
     },
     teamSummary_player_expand_button: {
         background: 'transparent',
@@ -352,13 +362,47 @@ export const theme = {
         fontSize: '14px',
         cursor: 'pointer'
     },
+    teamSummary_edit_detail_container: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        width: '100%'
+    },
+    teamSummary_select_input_option: {
+        maxWidth: '220px',
+        padding: '6px 10px',
+        borderRadius: '6px',
+        border: '1pers solid #ccc',
+        backgroundColor: '#fff',
+        fontSize: '14px',
+        boxSizing: 'border-box',
+    },
 
+    /*==================================================
+    =                     USER PROFILE                 =
+    ==================================================*/
+    
+    userProfile_container: {
+        background: '#ffffff',
+        borderRadius: '10px 10px 10px 10px',
+        padding: '10px 10px 20px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        marginBottom: '15px',
+    },
+    userProfile_label: {
+        fontSize: '14px',
+        marginBottom: '5px',
+        fontWeight: 'bold',
+        marginRight: '10px'
+    },
     /*==================================================
     =                      USEFUL                      =
     ==================================================*/
 
     infoLabel: {
-        fontSize: '14px'
+        fontSize: '14px',
     },
 
     inputField: {
