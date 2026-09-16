@@ -20,42 +20,33 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Atlètic Poblenou app - API")
 from fastapi.middleware.cors import CORSMiddleware
 
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173"
-]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 @app.middleware("http")
 async def add_cors_header(request: Request, call_next):
     origin = request.headers.get("origin")
     
-    # Comprovem si la petició ve de Cloudflare Pages
-    if origin and origin.endswith(".projecte-poblenou.pages.dev"):
-        if request.method == "OPTIONS":
-            # Resposta ràpida per a les peticions prèvies (preflight)
-            response = Response()
+    # Definim quins orígens permetem (localhost o qualsevol subdomini de Cloudflare Pages)
+    is_allowed = False
+    if origin:
+        if origin in ["http://localhost:5173", "http://127.0.0.1:5173"] or origin.endswith(".projecte-poblenou.pages.dev"):
+            is_allowed = True
+
+    # Si és una petició OPTIONS (preflight), responem directament
+    if request.method == "OPTIONS":
+        response = Response()
+        if is_allowed and origin:
             response.headers["Access-Control-Allow-Origin"] = origin
             response.headers["Access-Control-Allow-Credentials"] = "true"
-            response.headers["Access-Control-Allow-Methods"] = "*"
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
             response.headers["Access-Control-Allow-Headers"] = "*"
-            return response
-            
-        response = await call_next(request)
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Credentials"] = "true"
         return response
 
+    # Per a la resta de peticions normals
     response = await call_next(request)
+    if is_allowed and origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        
     return response
-
-
 
 
 # --------------------------------------------------------------------------------
