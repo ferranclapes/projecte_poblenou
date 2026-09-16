@@ -168,23 +168,32 @@ function TeamSummary({logo, onOpenMenu}) {
                 )}
 
                 {/* --- SECCIÓ D'EQUIPS --- */}
-                {teamGroups.map(({ team, players: teamPlayers }) => (
-                    <div key={team.id} style={{marginBottom: '20px'}}>
-                        <button
-                            onClick={() => toggleSelection(team.id)}
-                            style={theme.teamSummary_group_expand_button}
-                        >
-                            <span>🏐 {team.name} {team.category ? `(${team.category})` : ''} ({teamPlayers.length})</span>
-                            <span>{expandedSection[team.id] ? '▲ ' : '▼ '}</span>
-                        </button>
+                {teamGroups.map(({ team, players: teamPlayers }) => {
+                    const storedTeamIds = JSON.parse(localStorage.getItem('team_ids')) || [];
+                    const isAdmin = localStorage.getItem('is_admin') === 'true';
 
-                        {expandedSection[team.id] && (
-                            <div style={theme.teamSummary_section_content}>
-                                {teamPlayers.map(player => (renderUserCard(player)))}
-                            </div>
-                        )}
-                    </div>
-                ))}
+                    if (!isAdmin && !storedTeamIds.includes(team.id)) {
+                        return null;
+                    }
+
+                    return (
+                        <div key={team.id} style={{marginBottom: '20px'}}>
+                            <button
+                                onClick={() => toggleSelection(team.id)}
+                                style={theme.teamSummary_group_expand_button}
+                            >
+                                <span>🏐 {team.name} {team.category ? `(${team.category})` : ''} ({teamPlayers.length})</span>
+                                <span>{expandedSection[team.id] ? '▲ ' : '▼ '}</span>
+                            </button>
+
+                            {expandedSection[team.id] && (
+                                <div style={theme.teamSummary_section_content}>
+                                    {teamPlayers.map(player => (renderUserCard(player)))}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
 
                 {/* --- SECCIÓ DE JUGADORS NO ASSIGNATS --- */}
                 {unassignedPlayers.length > 0 && (

@@ -25,6 +25,7 @@ function LoginForm({ onLoginSuccess }) {
             localStorage.setItem('username', data.player_username);
             localStorage.setItem('prefered_name', data.prefered_name);
             localStorage.setItem('name', data.name);
+            localStorage.setItem('team_ids', JSON.stringify(data.team_ids));
 
             onLoginSuccess();
         })

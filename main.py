@@ -431,7 +431,8 @@ def login(login_data: schemas.LoginRequest, db: Session = Depends(get_db)):
         "is_admin": db_player.is_admin,
         "player_id": db_player.id,
         "player_username": db_player.username,  
-        "prefered_name": db_player.prefered_name
+        "prefered_name": db_player.prefered_name,
+        "team_ids": [team.id for team in db_player.teams]
     }
 
 # --- 6. TEAMS ---
