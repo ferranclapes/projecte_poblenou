@@ -4,7 +4,7 @@ from datetime import timedelta
 from fastapi import FastAPI, HTTPException, Depends, Request, Response
 from typing import List
 from sqlalchemy import text
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from backend.database import engine, Base, get_db
 import backend.models as models
@@ -389,41 +389,78 @@ def register_assistance(event_id: int, assistance: schemas.UpdateAssistance, db:
     db.commit()
     return {"status": "success", "message": f"Assistance updated to {assistance.status} for player {assistance.player_id} in event {event_id}"}
 
+@app.get("/events/{event_id}/assistances")
+def get_event_assistances(event_id: int, db: Session = Depends(get_db)):
+    # Busquem totes les assistències registrades per a aquest event
+    assistances = db.query(models.AssistanceModel).filter(
+        models.AssistanceModel.event_id == event_id
+    ).all()
+    
+    return assistances
 # --- 4. EVENT SUMMARY ---
 @app.get("/events/{event_id}/summary")
 def get_event_summary(event_id: int, db: Session = Depends(get_db)):
+    # 1. Comprovem que l'esdeveniment existeix
     event = db.query(models.EventModel).filter(models.EventModel.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     
+    # 2. Fem un JOIN directament entre assistències i jugadors en una sola query
+    results = db.query(models.AssistanceModel, models.PlayerModel).join(
+        models.PlayerModel, models.AssistanceModel.player_id == models.PlayerModel.id
+    ).filter(
+        models.AssistanceModel.event_id == event_id
+    ).all()
+
     total_confirmed = 0
+    total_declined = 0
+    total_pending = 0
+    
     sex_balance = {models.SexEnum.MALE.value: 0, models.SexEnum.FEMALE.value: 0}
     position_balance = {
         models.PositionEnum.SETTER.value: 0,
         models.PositionEnum.MIDDLE.value: 0,
         models.PositionEnum.OPPOSITE.value: 0,
         models.PositionEnum.OUTSIDE.value: 0,
-        models.PositionEnum.LIBERO.value: 0
+        models.PositionEnum.LIBERO.value: 0,
+        models.PositionEnum.NONE.value: 0
     }
-
-    confirmed_assistances = db.query(models.AssistanceModel).filter(
-        models.AssistanceModel.event_id == event_id,
-        models.AssistanceModel.status == models.AssistanceStatusEnum.ASSISTING.value
-    ).all()
-    for assistance in confirmed_assistances:
-        total_confirmed += 1
-
-        player = db.query(models.PlayerModel).filter(models.PlayerModel.id == assistance.player_id).first()
-        if player:
-            sex_balance[player.sex] += 1
-            position_balance[player.main_position] += 1
     
+    confirmed_players_list = []
+
+    for assistance, player in results:
+        status = assistance.status
+        
+        if status == models.AssistanceStatusEnum.ASSISTING.value:
+            total_confirmed += 1
+            if player:
+                if player.sex in sex_balance:
+                    sex_balance[player.sex] += 1
+                if player.main_position in position_balance:
+                    position_balance[player.main_position] += 1
+                
+                confirmed_players_list.append({
+                    "id": player.id,
+                    "name": player.name,
+                    "prefered_name": player.prefered_name,
+                    "surname1": player.surname1,
+                    "main_position": player.main_position,
+                    "sex": player.sex
+                })
+        elif status == models.AssistanceStatusEnum.NOT_ASSISTING.value:
+            total_declined += 1
+        else:
+            total_pending += 1
+
     return {
         "event_id": event_id,
         "event_name": event.name,
         "total_confirmed": total_confirmed,
+        "total_declined": total_declined,
+        "total_pending": total_pending,
         "sex_balance": sex_balance,
-        "position_balance": position_balance
+        "position_balance": position_balance,
+        "confirmed_players": confirmed_players_list
     }
 
 # --- 5. AUTHENTICATION ---

@@ -1,10 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import {theme} from '../styles.js';
 import API_URL from '../services/api.js';
 
 function EventCard({event, onClickEvent, onEdit, onRefreshEvents}) {
   const [assistance, setAssistance] = useState(null);
+
+  useEffect(() => {
+    const userId = localStorage.getItem('user_id');
+    if (userId && event?.id) {
+      // Demanem al backend les assistències d'aquest event
+      axios.get(`${API_URL}/events/${event.id}/assistances`)
+        .then(res => {
+          // Busquem si l'usuari actual ja té un vot registrat
+          const userAssistance = res.data.find(a => a.player_id === parseInt(userId, 10));
+          if (userAssistance) {
+            setAssistance(userAssistance.status);
+          }
+        })
+        .catch(error => {
+          console.error("Error carregant l'estat d'assistència:", error);
+        });
+    }
+  }, [event.id]);
 
   //* Called when clicking an assistance button
   const handleVote = (status, e) => {
