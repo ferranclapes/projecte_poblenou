@@ -27,7 +27,7 @@ async def add_cors_header(request: Request, call_next):
     # Definim quins orígens permetem (localhost o qualsevol subdomini de Cloudflare Pages)
     is_allowed = False
     if origin:
-        if origin in ["http://localhost:5173", "http://127.0.0.1:5173"] or origin.endswith(".projecte-poblenou.pages.dev"):
+        if origin in ["http://localhost:5173", "http://127.0.0.1:5173"] or origin.endswith(".projecte-poblenou.pages.dev") or origin.endswith(".laxarxa.pages.dev"):
             is_allowed = True
 
     # Si és una petició OPTIONS (preflight), responem directament
