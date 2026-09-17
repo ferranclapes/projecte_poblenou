@@ -397,6 +397,36 @@ export const theme = {
         fontWeight: 'bold',
         marginRight: '10px'
     },
+
+    /*==================================================
+    =                     EVENT SUMMARY                =
+    ==================================================*/
+    
+    eventSummary_header: {
+        alignItems: 'center',
+        width: '100%',
+        background: '#ff3131',
+        padding: '5px 10px 15px 15px', //top, right, bottom, left
+        borderRadius: '0 0 15px 15px',
+        boxSizing: 'border-box',
+        marginBottom: '20px'
+    },
+
+    eventSummary_section:{
+        background: '#ffffff', 
+        borderRadius: '8px', 
+        padding: '15px', 
+        marginBottom: '20px',
+    },
+
+    eventSummary_section_title: {
+        margin: '0 0 10px 0',
+        fontSize: '16px',
+        borderBottom: '1px solid #cccccc',
+        paddingBottom: '5px',
+        color: '#ff0000',
+    },
+    
     /*==================================================
     =                      USEFUL                      =
     ==================================================*/
