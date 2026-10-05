@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()  # Això llegeix el fitxer .env de la carpeta
+
 from sqlalchemy.orm import Session
 from database import SessionLocal
 import models
