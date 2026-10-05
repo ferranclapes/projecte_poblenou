@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png', '/images/logo-atletic-192.png', '/images/logo-atletic-512.png'],
       manifest: {
         name: 'LaXarxa',
         description: "Aplicació de gestió d'equips de volley",
@@ -18,14 +18,16 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: '/assets/logo-atletic-192.png',
+            src: '/images/logo-atletic-192.png',
             sizes: '192x192',
             type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: '/assets/logo-atletic-512.png',
+            src: '/images/logo-atletic-512.png',
             sizes: '512x512',
             type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       }
