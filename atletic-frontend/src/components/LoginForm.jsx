@@ -20,10 +20,10 @@ function LoginForm({ onLoginSuccess }) {
             const data = response.data;
 
             localStorage.setItem('token', data.access_token);
-            localStorage.setItem('role', data.role);
+            localStorage.setItem('user_type', data.user_type);
             localStorage.setItem('is_admin', data.is_admin);
-            localStorage.setItem('user_id', data.player_id);
-            localStorage.setItem('username', data.player_username);
+            localStorage.setItem('user_id', data.user_id);
+            localStorage.setItem('username', data.user_username);
             localStorage.setItem('prefered_name', data.prefered_name);
             localStorage.setItem('name', data.name);
             localStorage.setItem('team_ids', JSON.stringify(data.team_ids));

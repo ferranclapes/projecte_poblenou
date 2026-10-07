@@ -11,7 +11,7 @@ function UserSearcher({logo, onOpenMenu}) {
 
     useEffect(() => {
         const token = localStorage.getItem('token');
-        axios.get(`${API_URL}/players`, {
+        axios.get(`${API_URL}/users`, {
             headers: {'Authorization': `Bearer ${token}`}
         })
         .then(response => {
@@ -32,14 +32,14 @@ function UserSearcher({logo, onOpenMenu}) {
         return fullName.includes(query) || preferedName.includes(query);
     });
 
-    if (loading) { return <p>Carregant jugadors...</p>; }
+    if (loading) { return <p>Carregant usuaris...</p>; }
 
     return (
         <div>
             <div style={theme.teamSummary_header}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <img src={logo} alt="Logo" style={theme.teamSummary_logo} /> 
-                    <h1 style={theme.teamSummary_header_title}>Cercador de Jugadors</h1>
+                    <h1 style={theme.teamSummary_header_title}>Cercador de Usuaris</h1>
                 </div>
                 <button onClick={onOpenMenu} style={theme.teamSummary_menu_button}>
                     ☰
@@ -69,70 +69,7 @@ function UserSearcher({logo, onOpenMenu}) {
                 {/* Resultats de la cerca */}
                 {filteredUsers.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        {filteredUsers.map(player => {
-                            const displayName = player.prefered_name !== player.name && localStorage.getItem('role') === 'entrenador' ? `${player.prefered_name} (${player.name})` : player.prefered_name;
-                            const teamNames = player.teams && player.teams.length > 0 
-                                ? player.teams.map(t => t.name).join(', ') 
-                                : 'Sense equip';
-                            const positions = player.secondary_position !== "-" ? `${player.main_position}, ${player.secondary_position}` : player.main_position;
-
-                            return (
-                                <div key={player.id} style={{ ...theme.teamSummary_player_continer, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <div>
-                                        <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: '#333' }}>
-                                            {displayName} {player.surname1} {player.surname2}
-                                        </h3>
-                                        <p style={{ margin: 0, fontSize: '13px', color: '#666' }}>
-                                            <strong>Posició:</strong> {positions} | <strong>Equip:</strong> {teamNames} | <strong>Rol:</strong> {player.role}
-                                        </p>
-                                    </div>
-                                    <span style={{ fontSize: '12px', padding: '4px 8px', borderRadius: '4px', background: player.role === 'entrenador' ? '#333' : '#ff3131', color: '#fff', fontWeight: 'bold' }}>
-                                        {player.role.toUpperCase()}
-                                    </span>
-                                    {resetPasswordPermision && (
-                                        <span>
-                                        <button style={{...theme.btnSecondary, marginTop: '8px'}} onClick={() => {
-                                            if (window.confirm(`Segur que vols reiniciar la contrasenya de ${displayName}?`)) {
-                                                const token = localStorage.getItem('token');
-                                                axios.post(`${API_URL}/players/${player.id}/reset-password`, {}, {
-                                                    headers: {'Authorization': `Bearer ${token}`}
-                                                })
-                                                .then(response => {
-                                                    alert(`${response.data.message}`);
-                                                })
-                                                .catch(error => {
-                                                    console.error('Error resetting password: ', error);
-                                                    alert('S\'ha produït un error en reiniciar la contrasenya.');
-                                                });
-                                            }
-                                        }}>
-                                            Reiniciar contrasenya
-                                        </button>
-                                        <button style={{...theme.btnSecondary, marginTop: '8px', marginLeft: '8px'}} onClick={() => {
-                                            if (window.confirm(`Segur que vols eliminar el jugador ${displayName}?`)) {
-                                                const token = localStorage.getItem('token');
-                                                axios.delete(`${API_URL}/players/${player.id}`, {
-                                                    headers: {'Authorization': `Bearer ${token}`}
-                                                })
-                                                .then(response => {
-                                                    alert(`${response.data.message}`);
-                                                    // Actualitzar la llista de jugadors després d'eliminar
-                                                    setUsers(prevUsers => prevUsers.filter(u => u.id !== player.id));
-                                                })
-                                                .catch(error => {
-                                                    console.error('Error deleting player: ', error);
-                                                    alert('S\'ha produït un error en eliminar el jugador.');
-                                                });
-                                            }
-                                        }}>
-                                            Eliminar jugador
-                                        </button>
-                                    </span>
-
-                                    )}
-                                </div>
-                            );
-                        })}
+                        {filteredUsers.map(user => renderUserCard(user))}
                     </div>
                 ) : (
                     <p style={{ textAlign: 'center', color: '#666', fontStyle: 'italic', marginTop: '20px' }}>
@@ -142,6 +79,77 @@ function UserSearcher({logo, onOpenMenu}) {
 
             </div>
         </div>
-    )
+    );
+
+    function renderUserCard(user){
+        // No mostrar l'usuari si és un administrador
+        if (!user || user.user_type === 'Administrador') return;
+
+        const displayName = user.prefered_name !== user.name && localStorage.getItem('user_type') === 'Entrenador' ? `${user.prefered_name} (${user.name})` : user.prefered_name;
+        const teamNames = user.teams && user.teams.length > 0 
+            ? user.teams.map(t => t.name).join(', ') 
+            : 'Sense equip';
+        const positions = user.secondary_position !== "-" ? `${user.main_position}, ${user.secondary_position}` : user.main_position;
+
+        return (
+            <div key={user.id} style={{ ...theme.teamSummary_player_continer, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                    <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: '#333' }}>
+                        {displayName} {user.surname1} {user.surname2}
+                    </h3>
+                    {user.user_type === 'Jugador' &&
+                    <p style={{ margin: 0, fontSize: '13px', color: '#666' }}>
+                        <strong>Posició:</strong> {positions} | <strong>Equip:</strong> {teamNames}
+                    </p>
+                    }
+                </div>
+                <span style={{ fontSize: '12px', padding: '4px 8px', borderRadius: '4px', background: user.user_type === 'Entrenador' ? '#333' : '#ff3131', color: '#fff', fontWeight: 'bold' }}>
+                    {user.user_type.toUpperCase()}
+                </span>
+                {resetPasswordPermision && (
+                    <span>
+                    <button style={{...theme.btnSecondary, marginTop: '8px'}} onClick={() => {
+                        if (window.confirm(`Segur que vols reiniciar la contrasenya de ${displayName}?`)) {
+                            const token = localStorage.getItem('token');
+                            axios.post(`${API_URL}/users/${user.id}/reset-password`, {}, {
+                                headers: {'Authorization': `Bearer ${token}`}
+                            })
+                            .then(response => {
+                                alert(`${response.data.message}`);
+                            })
+                            .catch(error => {
+                                console.error('Error resetting password: ', error);
+                                alert('S\'ha produït un error en reiniciar la contrasenya.');
+                            });
+                        }
+                    }}>
+                        Reiniciar contrasenya
+                    </button>
+                    <button style={{...theme.btnSecondary, marginTop: '8px', marginLeft: '8px'}} onClick={() => {
+                        if (window.confirm(`Segur que vols eliminar el jugador ${displayName}?`)) {
+                            const token = localStorage.getItem('token');
+                            axios.delete(`${API_URL}/users/${user.id}`, {
+                                headers: {'Authorization': `Bearer ${token}`}
+                            })
+                            .then(response => {
+                                alert(`${response.data.message}`);
+                                // Actualitzar la llista de jugadors després d'eliminar
+                                setUsers(prevUsers => prevUsers.filter(u => u.id !== user.id));
+                            })
+                            .catch(error => {
+                                console.error('Error deleting player: ', error);
+                                alert('S\'ha produït un error en eliminar el jugador.');
+                            });
+                        }
+                    }}>
+                        Eliminar jugador
+                    </button>
+                </span>
+
+                )}
+            </div>
+        );
+    }
+
 }
 export default UserSearcher;

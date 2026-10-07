@@ -13,11 +13,11 @@ SQLALCHEMY_DATABASE_URL = os.getenv(
     "mysql+pymysql://root:root@localhost:3306/r1_database"
 )
 
-engine = create_engine(
+Engine = create_engine(
     SQLALCHEMY_DATABASE_URL
 )
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=Engine)
 
 Base = declarative_base()
 

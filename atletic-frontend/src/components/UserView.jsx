@@ -8,7 +8,7 @@ import PasswordForm from './PasswordForm.jsx';
 function UserView({ logo, onOpenMenu}) {
     const [editingCell, setEditingCell] = useState(null);
     const [editValue, setEditValue] = useState('');
-    const [player, setPlayer] = useState({});
+    const [user, setUser] = useState({});
     const [showPasswordForm, setShowPasswordForm] = useState(false);
 
     useEffect(() => {
@@ -16,10 +16,10 @@ function UserView({ logo, onOpenMenu}) {
         const userId = localStorage.getItem('user_id');
 
         if (userId) {
-            axios.get(`${API_URL}/players/${userId}`, {
+            axios.get(`${API_URL}/users/${userId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
-            .then(response => setPlayer(response.data))
+            .then(response => setUser(response.data))
             .catch(error => console.error("Error carregant el perfil:", error));
         }
     }, []);
@@ -34,14 +34,14 @@ function UserView({ logo, onOpenMenu}) {
         const userId = localStorage.getItem('user_id');
         const payload = { [editingCell]: editValue };
 
-        axios.patch(`${API_URL}/players/${userId}`, payload, {
+        axios.patch(`${API_URL}/users/${userId}`, payload, {
             headers: {
                 'Authorization': `Bearer ` + token
             }
         })
         .then(() => {
             // Actualitzem l'estat localment per veure el canvi a l'instant
-            setPlayer(prev => ({ ...prev, [editingCell]: editValue }));
+            setUser(prev => ({ ...prev, [editingCell]: editValue }));
             setEditingCell(null);
             alert("✅ Informació actualitzada correctament!");
         })
@@ -80,8 +80,8 @@ function UserView({ logo, onOpenMenu}) {
                         </div>
                     ) : (
                         <>
-                        <div><strong>Nom Preferit:</strong> {player.prefered_name}</div>
-                        <button onClick={() => startEditing("preferedname", player.prefered_name)} style={theme.teamSummary_edit_detail_button}>✏️</button>
+                        <div><strong>Nom Preferit:</strong> {user.prefered_name}</div>
+                        <button onClick={() => startEditing("preferedname", user.prefered_name)} style={theme.teamSummary_edit_detail_button}>✏️</button>
                     </>
                     )}
                 </div>
@@ -99,8 +99,8 @@ function UserView({ logo, onOpenMenu}) {
                         </div>
                     ) : (
                         <>
-                        <div><strong>Nom:</strong> {player.name}</div>
-                        <button onClick={() => startEditing("name", player.name)} style={theme.teamSummary_edit_detail_button}>✏️</button>
+                        <div><strong>Nom:</strong> {user.name}</div>
+                        <button onClick={() => startEditing("name", user.name)} style={theme.teamSummary_edit_detail_button}>✏️</button>
                     </>
                     )}
                 </div>
@@ -118,8 +118,8 @@ function UserView({ logo, onOpenMenu}) {
                         </div>
                     ) : (
                         <>
-                        <div><strong>1r Cognom:</strong> {player.surname1}</div>
-                        <button onClick={() => startEditing("surname1", player.surname1)} style={theme.teamSummary_edit_detail_button}>✏️</button>
+                        <div><strong>1r Cognom:</strong> {user.surname1}</div>
+                        <button onClick={() => startEditing("surname1", user.surname1)} style={theme.teamSummary_edit_detail_button}>✏️</button>
                     </>
                     )}
                 </div>
@@ -137,8 +137,8 @@ function UserView({ logo, onOpenMenu}) {
                         </div>
                     ) : (
                         <>
-                        <div><strong>2n Cognom:</strong> {player.surname2}</div>
-                        <button onClick={() => startEditing("surname2", player.surname2)} style={theme.teamSummary_edit_detail_button}>✏️</button>
+                        <div><strong>2n Cognom:</strong> {user.surname2}</div>
+                        <button onClick={() => startEditing("surname2", user.surname2)} style={theme.teamSummary_edit_detail_button}>✏️</button>
                     </>
                     )}
                 </div>
@@ -161,8 +161,8 @@ function UserView({ logo, onOpenMenu}) {
                         </div>
                     ) : (
                         <>
-                        <div><strong>Pronoms:</strong> {player.pronouns}</div>
-                        <button onClick={() => startEditing("pronouns", player.pronouns)} style={theme.teamSummary_edit_detail_button}>✏️</button>
+                        <div><strong>Pronoms:</strong> {user.pronouns}</div>
+                        <button onClick={() => startEditing("pronouns", user.pronouns)} style={theme.teamSummary_edit_detail_button}>✏️</button>
                     </>
                     )}
                 </div>

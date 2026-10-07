@@ -8,9 +8,11 @@ from backend.database import Base
 def get_enum_values(enum_class):
     return [e.value for e in enum_class]
 
-class UserRoleEnum(str, Enum):
-    PLAYER = "jugador"
-    COACH = "entrenador"
+class UserTypeEnum(str, Enum):
+    UNDEFINED = "-"
+    ADMIN = "Administrador"
+    PLAYER = "Jugador"
+    COACH = "Entrenador"
 
 class SexEnum(str, Enum):
     MALE = "Home"
@@ -58,13 +60,13 @@ event_teams = Table(
 
 # --- MODELS (SQLAlchemy): Define how is the data stored in the database ---
 
-class PlayerModel(Base):
-    __tablename__ = "players"
+class UserModel(Base):
+    __tablename__ = "users"
     
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(150), unique=True, index=True, nullable=False)
-    hashed_password = Column(String(255), unique=True, index=True, nullable=True)
-
+    hashed_password = Column(String(255), unique=True, index=True, nullable=False)
+    
     # Personal information
     name = Column(String(100), nullable=False)
     surname1 = Column(String(100), nullable=False)
@@ -72,16 +74,51 @@ class PlayerModel(Base):
     prefered_name = Column(String(100), nullable=True)
     pronouns = Column(SQLEnum(PronounsEnum, values_callable=get_enum_values), nullable=True)
 
+    is_admin = Column(Boolean, default=False)
+
+    user_type = Column(SQLEnum(UserTypeEnum, values_callable=get_enum_values), nullable=False)
+
+    __mapper_args__ = {
+        'polymorphic_on': user_type,
+        'polymorphic_identity': UserTypeEnum.UNDEFINED.value,
+    }
+
+class PlayerModel(UserModel):
+    __tablename__ = "players"
+
+    id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+
     # Volleyball-specific attributes
     sex = Column(SQLEnum(SexEnum, values_callable=get_enum_values), nullable=False)
     main_position = Column(SQLEnum(PositionEnum, values_callable= get_enum_values), nullable=False)
     secondary_position = Column(SQLEnum(PositionEnum, values_callable=get_enum_values), nullable=True)
 
-    # User role and admin status
-    role = Column(SQLEnum(UserRoleEnum, values_callable=get_enum_values), default=UserRoleEnum.PLAYER, nullable=False)
-    is_admin = Column(Boolean, default=False)
+    is_capitan = Column(Boolean, default=False)
 
     teams = relationship("TeamModel", secondary=player_teams, back_populates="players")
+
+    __mapper_args__ = {
+        'polymorphic_identity': UserTypeEnum.PLAYER.value,
+    }
+
+class CoachModel(UserModel):
+    __tablename__ = "coaches"
+
+    id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': UserTypeEnum.COACH.value,
+    }
+
+class AdminModel(UserModel):
+    __tablename__ = "admins"
+
+    id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': UserTypeEnum.ADMIN.value,
+    }
+    
 
 class EventModel(Base):
     __tablename__ = "events"

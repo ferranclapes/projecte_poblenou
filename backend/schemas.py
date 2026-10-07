@@ -21,20 +21,30 @@ class TeamResponse(TeamBase):
     class Config:
         from_attributes = True
 
-class PlayerBase(BaseModel):
+class UserBase(BaseModel):
     name: str
     surname1: str
     surname2: str
     prefered_name: Optional[str] = None
     pronouns: Optional[models.PronounsEnum] = None
+    user_type: models.UserTypeEnum
 
+class CreateUser(UserBase):
+    password: str
+
+class UserResponse(UserBase):
+    id: int
+    is_admin: bool
+
+    class Config:
+        from_attributes = True
+
+class PlayerBase(UserBase):
     #club: Optional[str] = None
     team_ids: Optional[List[int]] = None
     sex: models.SexEnum
     main_position: models.PositionEnum
     secondary_position: Optional[models.PositionEnum] = None
-
-    role: Optional[models.UserRoleEnum] = models.UserRoleEnum.PLAYER
 
 class CreatePlayer(PlayerBase):
     password: str
@@ -48,7 +58,7 @@ class PlayerResponse(PlayerBase):
         from_attributes = True
 
 class PermissionsUpdate(BaseModel):
-    role: models.UserRoleEnum
+    role: models.UserTypeEnum
     is_admin: bool
 
 class CreateEvent(BaseModel):

@@ -13,7 +13,7 @@ function CreateMemberForm({onMemberCreated, logo, onOpenMenu}) {
     const [sex, setSex] = useState('Home');
     const [mainPosition, setMainPosition] = useState('Punta');
     const [secondaryPosition, setSecondaryPosition] = useState('-');
-    const [role, setRole] = useState('jugador');
+    const [userType, setUserType] = useState('Jugador');
 
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -23,7 +23,7 @@ function CreateMemberForm({onMemberCreated, logo, onOpenMenu}) {
     const [positions, setPositions] = useState([]);
     const [pronounsOptions, setPronounsOptions] = useState([]);
     const [sexOptions, setSexOptions] = useState([]);
-    const [roles, setRoles] = useState([]);
+    const [userTypes, setUserTypes] = useState([]);
 
     useEffect(() => {
     const token = localStorage.getItem('token');
@@ -38,26 +38,20 @@ function CreateMemberForm({onMemberCreated, logo, onOpenMenu}) {
         })
     .catch(error => console.error("Error al obtenir els equips:", error));
 
-    axios.get(`${API_URL}/utils/positions`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    .then(response => setPositions(response.data))
-    .catch(error => console.error("Error al obtenir les posicions:", error));
-
     axios.get(`${API_URL}/utils/enums`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     .then(response => {
         setPronounsOptions(response.data.pronouns);
         setSexOptions(response.data.sexes);
-        setRoles(response.data.roles);
+        setUserTypes(response.data.user_types);
         setPositions(response.data.positions);
     })
     .catch(error => console.error("Error al obtenir els enums:", error));
   }, []);
-  const handleRoleChange = (newRole) => {
-        setRole(newRole);
-        if (newRole === 'jugador' && teams.length > 1) {
+  const handleUserTypeChange = (newUserType) => {
+        setUserType(newUserType);
+        if (newUserType === 'Jugador' && teams.length > 1) {
             // Si passa a jugador i en tenia molts, deixem només el primer
             setSelectedTeam([teams[0].id]);
         }
@@ -67,55 +61,94 @@ function CreateMemberForm({onMemberCreated, logo, onOpenMenu}) {
         e.preventDefault();
         setErrorMessage('');
 
-        const formattedTeamIds = role === 'jugador'
-            ? [Number(selectedTeam)]
-            : teams.map(t => t.id);
+        if (userType === 'Jugador') {
 
-        const payload = {
-            name: name,
-            surname1: surname1,
-            surname2: surname2,
-            prefered_name: preferedName === '' ? name : preferedName,
-            pronouns: pronouns,
+            const formattedTeamIds = userType === 'Jugador'
+                ? [Number(selectedTeam)]
+                : teams.map(t => t.id);
 
-            sex: sex,
-            main_position: mainPosition,
-            secondary_position: secondaryPosition ? secondaryPosition : null,
+            const payload = {
+                name: name,
+                surname1: surname1,
+                surname2: surname2,
+                prefered_name: preferedName === '' ? name : preferedName,
+                pronouns: pronouns,
 
-            role: role,
+                sex: sex,
+                main_position: mainPosition,
+                secondary_position: secondaryPosition ? secondaryPosition : null,
 
-            team_ids: formattedTeamIds,
+                user_type: userType,
 
-            password: preferedName === '' ? name+surname1 : preferedName+surname1,
-        }
+                team_ids: formattedTeamIds,
 
-        axios.post(`${API_URL}/players`, payload,{
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}`
+                password: preferedName === '' ? name+surname1 : preferedName+surname1,
             }
-        })
-        .then(response => {
-            console.log("Jugador creat correctament:", response.data);
-        })
-        .then(() => {
-            alert('Registre completat amb èxit!');
-            onMemberCreated();
-        })
-        .catch(error => {
-            if (error.response && error.response.data) {
-                const data = error.response.data;
-                if (typeof data.detail === 'string') {
-                    setErrorMessage(error.response.data.detail);
-                } else if (Array.isArray(data.detail) && data.detail[0] && data.detail[0].msg) {
-                    setErrorMessage(data.detail[0].msg);
-                } else if (data.message) {
-                    setErrorMessage(data.message);
-                } else {
-                    setErrorMessage('Les dades introduïdes no tenen un format correcte.');
+
+            axios.post(`${API_URL}/players`, payload,{
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}`
                 }
-            } else {
-                setErrorMessage('Error desconegut al registrar el jugador.');
+            })
+            .then(() => {
+                alert('Registre completat amb èxit!');
+                onMemberCreated();
+            })
+            .catch(error => {
+                if (error.response && error.response.data) {
+                    const data = error.response.data;
+                    if (typeof data.detail === 'string') {
+                        setErrorMessage(error.response.data.detail);
+                    } else if (Array.isArray(data.detail) && data.detail[0] && data.detail[0].msg) {
+                        setErrorMessage(data.detail[0].msg);
+                    } else if (data.message) {
+                        setErrorMessage(data.message);
+                    } else {
+                        setErrorMessage('Les dades introduïdes no tenen un format correcte.');
+                    }
+                } else {
+                    setErrorMessage('Error desconegut al registrar el jugador.');
+                }
+            });
+        }
+        else if (userType === 'Entrenador' || userType === 'Administrador') {
+            const payload = {
+                name: name,
+                surname1: surname1,
+                surname2: surname2,
+                prefered_name: preferedName === '' ? name : preferedName,
+                pronouns: pronouns,
+
+                user_type: userType,
+                password: preferedName === '' ? name+surname1 : preferedName+surname1,
+
+                is_admin: true
             }
-        });
+
+            axios.post(`${API_URL}/users`, payload,{
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+            .then(() => {
+                alert('Registre completat amb èxit!');
+                onMemberCreated();
+            })
+            .catch(error => {
+                if (error.response && error.response.data) {
+                    const data = error.response.data;
+                    if (typeof data.detail === 'string') {
+                        setErrorMessage(error.response.data.detail);
+                    } else if (Array.isArray(data.detail) && data.detail[0] && data.detail[0].msg) {
+                        setErrorMessage(data.detail[0].msg);
+                    } else if (data.message) {
+                        setErrorMessage(data.message);
+                    } else {
+                        setErrorMessage('Les dades introduïdes no tenen un format correcte.');
+                    }
+                } else {
+                    setErrorMessage("Error desconegut al registrar l'usuari.");
+                }
+            });
+        }
     };
 
     return (
@@ -176,8 +209,8 @@ function CreateMemberForm({onMemberCreated, logo, onOpenMenu}) {
                 <h3 style={{ margin: '10px 0 5px 0', color: '#ff3131', fontSize: '18px' }}>Informació de Jugador/a</h3>
                 <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '12px', color: '#333' }}>Rol</label>
                 <div style={{ display: 'flex', gap: '10px', justifyContent: 'center'}}>
-                    <select value={role} onChange={(e) => handleRoleChange(e.target.value)} style={{ width: '50%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc', marginBottom: '10px' }}>
-                        {roles.map(roleOption => (
+                    <select value={userType} onChange={(e) => handleUserTypeChange(e.target.value)} style={{ width: '50%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc', marginBottom: '10px' }}>
+                        {userTypes.map(roleOption => (
                             <option key={roleOption.value} value={roleOption.value}>
                                 {roleOption.label}
                             </option>
@@ -185,7 +218,7 @@ function CreateMemberForm({onMemberCreated, logo, onOpenMenu}) {
                     </select>
                 </div>
 
-                {role === 'jugador' && (
+                {userType === 'Jugador' && (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                         <div>
                             <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '12px', color: '#333' }}>Equip</label>

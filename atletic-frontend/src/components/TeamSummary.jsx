@@ -6,15 +6,16 @@ import API_URL from '../services/api.js';
 
 function TeamSummary({logo, onOpenMenu}) {
     const [players, setPlayers] = useState([]);
+    const [coaches, setCoaches] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [expandedPlayerId, setExpandedPlayerId] = useState(null);
+    const [expandedUserId, setExpandedUserId] = useState(null);
     const [expandedSection, setExpandedSection] = useState({});
-    const [editingPermission] = useState((localStorage.getItem('is_admin') === 'true' || localStorage.getItem('role') === 'entrenador') ? true : false);
+    const [editingPermission] = useState((localStorage.getItem('is_admin') === 'true' || localStorage.getItem('user_type') === 'Entrenador') ? true : false);
     const [editingCell, setEditingCell] = useState(null);
     const [editValue, setEditValue] = useState('');
     const [availableTeams, setAvailableTeams] = useState([]);
     const [positions, setPositions] = useState([]);
-    const [roles, setRoles] = useState([]);
+    const [userTypes, setUserTypes] = useState([]);
 
     const toggleSelection = (sectionKey) => {
         setExpandedSection(prevState => ({
@@ -23,8 +24,8 @@ function TeamSummary({logo, onOpenMenu}) {
         }));
     }
 
-    const togglePlayerDetails = (playerId) => {
-        setExpandedPlayerId(expandedPlayerId === playerId ? null : playerId);
+    const toggleUserDetails = (playerId) => {
+        setExpandedUserId(expandedUserId === playerId ? null : playerId);
     };
 
     const fetchPlayers = () => {
@@ -39,6 +40,16 @@ function TeamSummary({logo, onOpenMenu}) {
         });
     }
 
+    const fetchCoaches = () => {
+        axios.get(`${API_URL}/coaches`)
+        .then(response => {
+            setCoaches(response.data);
+        })
+        .catch(error => {
+            console.error('Error fetching coaches:', error);
+        });
+    };
+
     const fetchTeams = () => {
         axios.get(`${API_URL}/teams`)
             .then(response => {
@@ -52,18 +63,19 @@ function TeamSummary({logo, onOpenMenu}) {
     useEffect(() => {
         fetchPlayers();
         fetchTeams();
+        fetchCoaches();
         axios.get(`${API_URL}/utils/enums`)
             .then(response => {
                 setPositions(response.data.positions);
-                setRoles(response.data.roles);
+                setUserTypes(response.data.user_types);
             })
             .catch(error => {
                 console.error('Error fetching enums:', error);
             });
     }, []);
 
-    const startEditing = (playerId, field, currentValue) => {
-        setEditingCell({ playerId, field });
+    const startEditing = (userId, field, currentValue) => {
+        setEditingCell({ userId, field });
         if (field === 'teams') {
             setEditValue(currentValue && currentValue.length > 0 ? currentValue[0] : '');
         } else {
@@ -71,12 +83,12 @@ function TeamSummary({logo, onOpenMenu}) {
         }
     };
 
-    const saveFieldUpdate = (playerId) => {
+    const saveFieldUpdate = (userId) => {
         const token = localStorage.getItem('token');
         const { field } = editingCell;
 
         if (field === 'teams') {
-            axios.put(`${API_URL}/players/${playerId}/teams`, { team_ids: editValue }, {
+            axios.put(`${API_URL}/players/${userId}/teams`, { team_ids: editValue }, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -94,7 +106,7 @@ function TeamSummary({logo, onOpenMenu}) {
         let payload = {};
         payload[field] = editValue;
 
-        axios.patch(`${API_URL}/players/${playerId}`, payload, {
+        axios.patch(`${API_URL}/players/${userId}`, payload, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -123,17 +135,15 @@ function TeamSummary({logo, onOpenMenu}) {
     
     if (loading) return <p>Carregant la plantilla de l'equip...</p>
 
-    const coachesGroup = players.filter(player => player.role === 'entrenador');
-
     const teamGroups = availableTeams.map(team => {
         const teamPlayers = players.filter(player => 
-            player.role !== 'entrenador' && player.teams && player.teams.some(t => t.id === team.id)
+            player.teams && player.teams.some(t => t.id === team.id)
         );
         return { team, players: teamPlayers };
     });
 
     const unassignedPlayers = players.filter(player => 
-        player.role !== 'entrenador' && (!player.teams || player.teams.length === 0)
+        (!player.teams || player.teams.length === 0)
     );
 
     return (
@@ -150,19 +160,19 @@ function TeamSummary({logo, onOpenMenu}) {
 
             <div style={theme.teamSummary_player_list_container}>
                 {/* --- SECCIÓ D'ENTRENADORS --- */}
-                {coachesGroup.length > 0 && (
+                {coaches.length > 0 && (
                     <div style={{marginBottom: '20px'}}>
                         <button
                             onClick={() => toggleSelection('coaches')}
                             style={theme.teamSummary_group_expand_button}
                         >
-                            <span>👨‍🏫Entrenadors ({coachesGroup.length})</span>
+                            <span>👨‍🏫Entrenadors ({coaches.length})</span>
                             <span>{expandedSection['coaches'] ? '▲ ' : '▼ '}</span>
                         </button>
 
                         {expandedSection['coaches'] && (
                             <div style={theme.teamSummary_section_content}>
-                                {coachesGroup.map(player => (renderUserCard(player)))}
+                                {coaches.map(player => (renderUserCard(player)))}
                             </div>
                         )}
                     </div>
@@ -170,11 +180,12 @@ function TeamSummary({logo, onOpenMenu}) {
 
                 {/* --- SECCIÓ D'EQUIPS --- */}
                 {teamGroups.map(({ team, players: teamPlayers }) => {
-                    const storedTeamIds = JSON.parse(localStorage.getItem('team_ids')) || [];
                     const isAdmin = localStorage.getItem('is_admin') === 'true';
-
-                    if (!isAdmin && !storedTeamIds.includes(team.id)) {
-                        return null;
+                    if (!isAdmin) {
+                        const storedTeamIds = JSON.parse(localStorage.getItem('team_ids')) || [];
+                        if (!storedTeamIds.includes(team.id)) {
+                            return null;
+                        }
                     }
 
                     return (
@@ -218,14 +229,14 @@ function TeamSummary({logo, onOpenMenu}) {
         </div>
     );
 
-    function renderUserCard(player) {
-        const isExpanded = expandedPlayerId === player.id;
-        const isEditing = (field) => editingCell?.playerId === player.id && editingCell?.field === field;
+    function renderUserCard(user) {
+        const isExpanded = expandedUserId === user.id;
+        const isEditing = (field) => editingCell?.userId === user.id && editingCell?.field === field;
 
         return(
-            <div key={player.id} style={{ ...theme.teamSummary_player_continer, width: '100%', boxSizing: 'border-box' }}>
-                <button onClick={() => togglePlayerDetails(player.id)} style={theme.teamSummary_player_expand_button}>
-                    {isExpanded ? '▲ ' : '▼ '} {player.prefered_name ? player.prefered_name : player.name} {player.surname1} {player.surname2}
+            <div key={user.id} style={{ ...theme.teamSummary_player_continer, width: '100%', boxSizing: 'border-box' }}>
+                <button onClick={() => toggleUserDetails(user.id)} style={theme.teamSummary_player_expand_button}>
+                    {isExpanded ? '▲ ' : '▼ '} {user.prefered_name ? user.prefered_name : user.name} {user.surname1} {user.surname2}
                 </button>
 
                 <div style={{...theme.teamSummary_detail_container, gridTemplateRows: isExpanded ? '1fr' : '0fr', transition: 'grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1)'}}>
@@ -242,14 +253,14 @@ function TeamSummary({logo, onOpenMenu}) {
                                         </select>
                                     </div>
                                     <div>
-                                        <button onClick={() => saveFieldUpdate(player.id)} style={theme.teamSummary_edit_detail_button}>💾</button>
+                                        <button onClick={() => saveFieldUpdate(user.id)} style={theme.teamSummary_edit_detail_button}>💾</button>
                                         <button onClick={() => setEditingCell(null)} style={theme.teamSummary_edit_detail_button}>❌</button>
                                     </div>
                                 </div>
                             ) : (
                                 <>
-                                    <div><strong>Posició Principal:</strong> {player.main_position}</div>
-                                    {editingPermission && <button onClick={() => startEditing(player.id, 'main_position', player.main_position)} style={theme.teamSummary_edit_detail_button}>✏️</button>}
+                                    <div><strong>Posició Principal:</strong> {user.main_position}</div>
+                                    {editingPermission && <button onClick={() => startEditing(user.id, 'main_position', user.main_position)} style={theme.teamSummary_edit_detail_button}>✏️</button>}
                                 </>
                             )}
                         </div>
@@ -265,21 +276,21 @@ function TeamSummary({logo, onOpenMenu}) {
                                         </select>
                                     </div>
                                     <div>
-                                        <button onClick={() => saveFieldUpdate(player.id)} style={theme.teamSummary_edit_detail_button}>💾</button>
+                                        <button onClick={() => saveFieldUpdate(user.id)} style={theme.teamSummary_edit_detail_button}>💾</button>
                                         <button onClick={() => setEditingCell(null)} style={theme.teamSummary_edit_detail_button}>❌</button>
                                     </div>
                                 </div>
                             ) : (
                                 <>
-                                    <div><strong>Posició Secundària:</strong> {player.secondary_position || 'No assignada'}</div>
-                                    {editingPermission && <button onClick={() => startEditing(player.id, 'secondary_position', player.secondary_position)} style={theme.teamSummary_edit_detail_button}>✏️</button>}
+                                    <div><strong>Posició Secundària:</strong> {user.secondary_position || 'No assignada'}</div>
+                                    {editingPermission && <button onClick={() => startEditing(user.id, 'secondary_position', user.secondary_position)} style={theme.teamSummary_edit_detail_button}>✏️</button>}
                                 </>
                             )}
                         </div>
 
                         {/* Sexe */}
                         <div style={theme.teamSummary_detail_row}>
-                            <div><strong>Sexe:</strong> {player.sex}</div>
+                            <div><strong>Sexe:</strong> {user.sex}</div>
                         </div>
 
                         {/* Equips */}
@@ -309,7 +320,7 @@ function TeamSummary({logo, onOpenMenu}) {
                                                 // o ho gestionem directament enviant [Number(editValue)]
                                                 const payloadValue = editValue ? [Number(editValue)] : [];
                                                 // Trucar directament a saveFieldUpdate passant l'array convertit
-                                                saveFieldUpdateWithCustomValue(player.id, payloadValue);
+                                                saveFieldUpdateWithCustomValue(user.id, payloadValue);
                                             }} 
                                             style={theme.teamSummary_edit_detail_button}
                                         >
@@ -320,9 +331,9 @@ function TeamSummary({logo, onOpenMenu}) {
                                 </div>
                             ) : (
                                 <>
-                                    <div><strong>Equip:</strong> {player.teams && player.teams.length > 0 ? player.teams.map(t => t.name).join(', ') : 'No assignats'}</div>
-                                    {editingPermission && player.role !== 'entrenador' && (
-                                        <button onClick={() => startEditing(player.id, 'teams', player.teams ? player.teams.map(t => t.id) : [])} style={theme.teamSummary_edit_detail_button}>✏️</button>
+                                    <div><strong>Equip:</strong> {user.teams && user.teams.length > 0 ? user.teams.map(t => t.name).join(', ') : 'No assignats'}</div>
+                                    {editingPermission && user.role !== 'Entrenador' && (
+                                        <button onClick={() => startEditing(user.id, 'teams', user.teams ? user.teams.map(t => t.id) : [])} style={theme.teamSummary_edit_detail_button}>✏️</button>
                                     )}
                                 </>
                             )}
@@ -330,23 +341,24 @@ function TeamSummary({logo, onOpenMenu}) {
 
                         {/* Rol */}
                         <div style={theme.teamSummary_detail_row}>
-                            {isEditing('role') ? (
+                            {isEditing('user_type') ? (
                                 <div style={theme.teamSummary_edit_detail_container}>
                                     <div>
                                         <strong>Rol:</strong>
                                         <select value={editValue} onChange={(e) => setEditValue(e.target.value)}>
-                                            {roles.map(r => <option key={r.value} value={r.value} style={theme.teamSummary_select_input_option}>{r.label}</option>)}
+                                            {userTypes.map(r => <option key={r.value} value={r.value} style={theme.teamSummary_select_input_option}>{r.label}</option>)}
                                         </select>
                                     </div>
                                     <div>
-                                        <button onClick={() => saveFieldUpdate(player.id)} style={theme.teamSummary_edit_detail_button}>💾</button>
+                                        <button onClick={() => saveFieldUpdate(user.id)} style={theme.teamSummary_edit_detail_button}>💾</button>
                                         <button onClick={() => setEditingCell(null)} style={theme.teamSummary_edit_detail_button}>❌</button>
                                     </div>
                                 </div>
                             ) : (
                                 <>
-                                    <div><strong>Rol:</strong> {player.role}</div>
-                                    {editingPermission && <button onClick={() => startEditing(player.id, 'role', player.role)} style={theme.teamSummary_edit_detail_button}>✏️</button>}
+                                    <div><strong>Rol:</strong> {user.user_type}</div>
+                                    {/*editingPermission && <button onClick={() => startEditing(user.id, 'user_type', user.user_type)} style={theme.teamSummary_edit_detail_button}>✏️</button>*/}
+                                    {/* DE MOMENT NO ES POT CANVIAR EL ROL DELS USUARIS. ES COMPLICA AMB EL TEMA DE LA DB */}
                                 </>
                             )}
                         </div>
@@ -360,14 +372,14 @@ function TeamSummary({logo, onOpenMenu}) {
                                         <input type="checkbox" checked={Boolean(editValue)} onChange={(e) => setEditValue(e.target.checked)} style={{ width: '18px', height: '18px', cursor: 'pointer' }} />
                                     </div>
                                     <div>
-                                        <button onClick={() => saveFieldUpdate(player.id)} style={theme.teamSummary_edit_detail_button}>💾</button>
+                                        <button onClick={() => saveFieldUpdate(user.id)} style={theme.teamSummary_edit_detail_button}>💾</button>
                                         <button onClick={() => setEditingCell(null)} style={theme.teamSummary_edit_detail_button}>❌</button>
                                     </div>
                                 </div>
                             ) : (
                                 <>
-                                    <div><strong>Accés Admin:</strong> {player.is_admin ? 'Sí' : 'No'}</div>
-                                    {editingPermission && <button onClick={() => startEditing(player.id, 'is_admin', player.is_admin)} style={theme.teamSummary_edit_detail_button}>✏️</button>}
+                                    <div><strong>Accés Admin:</strong> {user.is_admin ? 'Sí' : 'No'}</div>
+                                    {editingPermission && <button onClick={() => startEditing(user.id, 'is_admin', user.is_admin)} style={theme.teamSummary_edit_detail_button}>✏️</button>}
                                 </>
                             )}
                         </div>

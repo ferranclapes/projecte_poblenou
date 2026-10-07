@@ -6,7 +6,7 @@ from typing import List
 from sqlalchemy import text
 from sqlalchemy.orm import Session, joinedload, selectinload
 
-from backend.database import engine, Base, get_db
+from backend.database import Engine, Base, get_db
 import backend.models as models
 import backend.schemas as schemas
 
@@ -14,7 +14,7 @@ import backend.auth as auth
 from fastapi.security import HTTPBearer
 
 # Force SQLAlchemy to create the database tables if non existent
-Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=Engine)
 
 # Initialize FastAPI app
 app = FastAPI(title="Atlètic Poblenou app - API")
@@ -53,14 +53,156 @@ async def add_cors_header(request: Request, call_next):
 # 3. API ENDPOINTS: Rutes of the API connected to the DB
 # --------------------------------------------------------------------------------
 
+# --- USER ---
+@app.post("/users", response_model=schemas.UserResponse, status_code=201)
+def create_user(user: schemas.CreateUser, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+    if current_user['user_type'] != models.UserTypeEnum.COACH.value and current_user['is_admin'] != True:
+        raise HTTPException(status_code=403, detail="Només els coaches i els administradors poden actualitzar el perfil.")
+    
+    existing_user = db.query(models.UserModel).filter(models.UserModel.name == user.name).first()
+    if existing_user:
+       raise HTTPException(status_code=400, detail="Ja existeix un usuari amb aquest nom.")
+    
+    plain_password = str(user.password)
+    hashed_password = auth.get_password_hash(plain_password)
+
+    if user.prefered_name is None:
+        user.prefered_name = user.name
+
+    db_user = models.UserModel(
+        username=f"{user.name.lower()}_{user.surname1.lower()}_{user.surname2.lower()}",
+
+        name=user.name,
+        surname1=user.surname1,
+        surname2=user.surname2,
+        prefered_name=user.prefered_name,
+        pronouns=user.pronouns,
+
+        user_type = user.user_type.value,
+
+        hashed_password=hashed_password,
+        is_admin = False
+    )
+                
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+
+    return db_user
+
+@app.get("/users")
+def list_users(db: Session = Depends(get_db)):
+    users = db.query(models.UserModel).order_by(models.UserModel.name.asc()).all()
+
+    response_users=[]
+    for user in users:
+        team_ids = [t.id for t in user.teams] if hasattr(user, 'teams') and user.teams else []
+        teams_data = [{"id": t.id, "name": t.name, "category": t.category} for t in user.teams] if hasattr(user, "teams") and user.teams else []
+
+        user_data = {
+            "id": user.id,
+            "username": user.username,
+            "name": user.name,
+            "surname1": user.surname1,
+            "surname2": user.surname2,
+            "prefered_name": user.prefered_name,
+            "pronouns": user.pronouns,
+            "is_admin": user.is_admin,
+            "user_type": user.user_type,
+            # Camps específics de jugador (si no en té perquè és coach, posem valors per defecte)
+            "sex": getattr(user, "sex", None),
+            "main_position": getattr(user, "main_position", None),
+            "secondary_position": getattr(user, "secondary_position", None),
+            "team_ids": team_ids,
+            "teams": teams_data
+        }
+        response_users.append(user_data)
+
+    return response_users
+
+@app.get("/users/{user_id}")
+def get_user(user_id: int, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+    user = db.query(models.UserModel).filter(models.UserModel.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Jugador no trobat")
+    return user
+
+@app.patch("/users/{user_id}")
+def update_player_profile(user_id: int, user_data: dict, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+    if current_user['user_type'] != models.UserTypeEnum.COACH.value and current_user['is_admin'] != True and current_user['id'] != user_id:
+        raise HTTPException(status_code=403, detail="Només els coaches i els administradors poden actualitzar el perfil.")
+
+    db_user = db.query(models.UserModel).filter(models.UserModel.id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="Player not found")
+    
+    for key, value in user_data.items():
+        if hasattr(db_user, key):
+            setattr(db_user, key, value)
+
+    if "name" in user_data or "surname1" in user_data or "surname2" in user_data:
+        db_user.username = f"{db_user.name}_{db_user.surname1}_{db_user.surname2}"
+
+    db.commit()
+    db.refresh(db_user)
+    return {"status": "success", "message": "Perfil actualitzat correctament"}
+
+@app.post("/users/{user_id}/change-password")
+def change_password(user_id: int, password_data: schemas.ChangePasswordRequest, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+    if current_user['id'] != user_id and current_user['is_admin'] != True:
+        raise HTTPException(status_code=403, detail="Només el propi usuari o un administrador poden canviar la contrasenya.")
+
+    db_user = db.query(models.UserModel).filter(models.UserModel.id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="Usuari no trobat")
+
+    if not auth.verify_password(password_data.current_password, db_user.hashed_password):
+        raise HTTPException(status_code=400, detail="La contrassenya actual és incorrecta.")
+
+    new_hashed_password = auth.get_password_hash(password_data.new_password)
+    db_user.hashed_password = new_hashed_password
+    db.commit()
+
+    return {"status": "success", "message": "Contrasenya canviada correctament"}
+
+@app.post("/users/{user_id}/reset-password")
+def reset_password(user_id: int, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+    if current_user['is_admin'] != True:
+        raise HTTPException(status_code=403, detail="Només els administradors poden reiniciar la contrasenya d'un usuari.")
+
+    db_user = db.query(models.UserModel).filter(models.UserModel.id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="Usuari no trobat")
+
+    # Reset password to prefered_name or name if prefered_name is empty
+    new_password = db_user.prefered_name+db_user.surname1 if db_user.prefered_name else db_user.name+db_user.surname1
+    new_hashed_password = auth.get_password_hash(new_password)
+    db_user.hashed_password = new_hashed_password
+    db.commit()
+
+    return {"status": "success", "message": f"Contrasenya reiniciada correctament. La nova contrassenya temporal és: '{new_password}'."}
+
+@app.delete("/users/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
+    if current_user['is_admin'] != True:
+        raise HTTPException(status_code=403, detail="Només els administradors poden eliminar usuaris.")
+
+    user = db.query(models.UserModel).filter(models.UserModel.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuari no trobat")
+    db.delete(user)
+    db.commit()
+    return {"status": "success", "message": f"Usuari eliminat correctament"}
+
+
 # --- 1. PLAYER ---
 @app.post("/players", response_model=schemas.PlayerResponse, status_code=201)
 def create_player(player: schemas.CreatePlayer, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
-    if current_user['role'] != models.UserRoleEnum.COACH.value and current_user['is_admin'] != True:
+    if current_user['user_type'] != models.UserTypeEnum.COACH.value and current_user['is_admin'] != True:
         raise HTTPException(status_code=403, detail="Només els coaches i els administradors poden actualitzar el perfil.")
     
-    existing_player = db.query(models.PlayerModel).filter(models.PlayerModel.name == player.name).first()
-    if existing_player:
+    existing_user = db.query(models.UserModel).filter(models.UserModel.name == player.name).first()
+    if existing_user:
        raise HTTPException(status_code=400, detail="Ja existeix un jugador amb aquest nom.")
     
     plain_password = str(player.password)
@@ -82,10 +224,10 @@ def create_player(player: schemas.CreatePlayer, db: Session = Depends(get_db), c
         main_position=player.main_position,
         secondary_position=player.secondary_position,
 
-        role = player.role,
+        user_type = models.UserTypeEnum.PLAYER.value,
 
         hashed_password=hashed_password,
-        is_admin = True if player.role == models.UserRoleEnum.COACH.value else False
+        is_admin = False
     )
 
     if player.team_ids:
@@ -114,7 +256,7 @@ def get_player(player_id: int, db: Session = Depends(get_db), current_user: dict
 
 @app.patch("/players/{player_id}")
 def update_player_profile(player_id: int, player_data: dict, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
-    if current_user['role'] != models.UserRoleEnum.COACH.value and current_user['is_admin'] != True and current_user['id'] != player_id:
+    if current_user['user_type'] != models.UserTypeEnum.COACH.value and current_user['is_admin'] != True and current_user['id'] != player_id:
         raise HTTPException(status_code=403, detail="Només els coaches i els administradors poden actualitzar el perfil.")
 
     db_player = db.query(models.PlayerModel).filter(models.PlayerModel.id == player_id).first()
@@ -134,7 +276,7 @@ def update_player_profile(player_id: int, player_data: dict, db: Session = Depen
 
 @app.put("/players/{player_id}/teams")
 def update_player_teams(player_id: int, payload: dict, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
-    if current_user['role'] != models.UserRoleEnum.COACH.value and current_user['is_admin'] != True:
+    if current_user['user_type'] != models.UserTypeEnum.COACH.value and current_user['is_admin'] != True:
         raise HTTPException(status_code=403, detail="Només els coaches i els administradors poden actualitzar els equips d'un jugador.")
 
     db_player = db.query(models.PlayerModel).filter(models.PlayerModel.id == player_id).first()
@@ -154,8 +296,8 @@ def update_player_teams(player_id: int, payload: dict, db: Session = Depends(get
 
 @app.put("players/{player_id}/teams/{team_id}")
 def assign_player_to_team(player_id: int, team_id: int, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
-    if current_user["is_admin"] != True:
-        raise HTTPException(status_code=403, detail="Només els administradors poden assignar jugadors a equips.")
+    if current_user["user_type"] != models.UserTypeEnum.COACH.value and current_user["is_admin"] != True:
+        raise HTTPException(status_code=403, detail="Només els coaches i els administradors poden assignar jugadors a equips.")
     
     check_query = text("SELECT * FROM player_teams WHERE player_id = :p_id AND team_id = :t_id")
     existing = db.execute(check_query, {"p_id": player_id, "t_id": team_id}).fetchone()
@@ -168,60 +310,16 @@ def assign_player_to_team(player_id: int, team_id: int, db: Session = Depends(ge
 
     return {"status": "success", "message": f"Jugador {player_id} assignat a l'equip {team_id} correctament."}
 
-@app.post("/players/{player_id}/change-password")
-def change_password(player_id: int, password_data: schemas.ChangePasswordRequest, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
-    if current_user['id'] != player_id and current_user['is_admin'] != True:
-        raise HTTPException(status_code=403, detail="Només el propi usuari o un administrador poden canviar la contrasenya.")
+# --- COACHES ---
+@app.get("/coaches", response_model=list[schemas.UserResponse])
+def get_coaches(db: Session = Depends(get_db)):
+    return db.query(models.UserModel).filter(models.UserModel.user_type == "Entrenador").all()
 
-    db_player = db.query(models.PlayerModel).filter(models.PlayerModel.id == player_id).first()
-    if not db_player:
-        raise HTTPException(status_code=404, detail="Usuari no trobat")
-
-    if not auth.verify_password(password_data.current_password, db_player.hashed_password):
-        raise HTTPException(status_code=400, detail="La contrassenya actual és incorrecta.")
-
-    new_hashed_password = auth.get_password_hash(password_data.new_password)
-    db_player.hashed_password = new_hashed_password
-    db.commit()
-
-    return {"status": "success", "message": "Contrasenya canviada correctament"}
-
-@app.post("/players/{player_id}/reset-password")
-def reset_password(player_id: int, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
-    if current_user['is_admin'] != True:
-        raise HTTPException(status_code=403, detail="Només els administradors poden reiniciar la contrasenya d'un jugador.")
-
-    db_player = db.query(models.PlayerModel).filter(models.PlayerModel.id == player_id).first()
-    if not db_player:
-        raise HTTPException(status_code=404, detail="Jugador no trobat")
-
-    # Reset password to prefered_name or name if prefered_name is empty
-    new_password = db_player.prefered_name+db_player.surname1 if db_player.prefered_name else db_player.name+db_player.surname1
-    new_hashed_password = auth.get_password_hash(new_password)
-    db_player.hashed_password = new_hashed_password
-    db.commit()
-
-    return {"status": "success", "message": f"Contrasenya reiniciada correctament. La nova contrassenya temporal és: '{new_password}'."}
-
-@app.delete("/players/{player_id}")
-def delete_player(player_id: int, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
-    if current_user['is_admin'] != True:
-        raise HTTPException(status_code=403, detail="Només els administradors poden eliminar jugadors.")
-
-    player = db.query(models.PlayerModel).filter(models.PlayerModel.id == player_id).first()
-    if not player:
-        raise HTTPException(status_code=404, detail="Jugador no trobat")
-
-    db.execute(text("DELETE FROM player_teams WHERE player_id = :p_id"), {"p_id": player_id})
-    
-    db.delete(player)
-    db.commit()
-    return {"status": "success", "message": f"Jugador {player_id} eliminat correctament"}
 
 # --- 2. EVENT ---
 @app.post("/events", status_code=201)
 def create_event(event: schemas.CreateEvent, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
-    if current_user['is_admin'] != True and current_user.get('role') != models.UserRoleEnum.COACH.value:
+    if current_user['user_type'] != models.UserTypeEnum.COACH.value and current_user['is_admin'] != True:
         raise HTTPException(status_code=403, detail="Només els entrenadors o administradors poden crear esdeveniments.")
 
     if event.is_periodic:
@@ -298,7 +396,7 @@ def list_events(db: Session = Depends(get_db)):
 
 @app.put("/events/{event_id}")
 def update_event(event_id: int, event_data: schemas.CreateEvent, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
-    if current_user['is_admin'] != True and current_user['role'] != models.UserRoleEnum.COACH.value:
+    if current_user['is_admin'] != True and current_user['user_type'] != models.UserTypeEnum.COACH.value:
         raise HTTPException(status_code=403, detail="Només els entrenadors o administradors poden actualitzar esdeveniments.")
 
     db_event = db.query(models.EventModel).filter(models.EventModel.id == event_id).first()
@@ -329,7 +427,7 @@ def update_event(event_id: int, event_data: schemas.CreateEvent, db: Session = D
 
 @app.delete("/events/{event_id}")
 def delete_event(event_id: int, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
-    if current_user['is_admin'] != True and current_user['role'] != models.UserRoleEnum.COACH.value:
+    if current_user['is_admin'] != True and current_user['user_type'] != models.UserTypeEnum.COACH.value:
         raise HTTPException(status_code=403, detail="Només els entrenadors o administradors poden eliminar esdeveniments.")
 
     event = db.query(models.EventModel).filter(models.EventModel.id == event_id).first()
@@ -344,7 +442,7 @@ def delete_event(event_id: int, db: Session = Depends(get_db), current_user: dic
 
 @app.post("/events/{event_id}/teams/{team_id}")
 def assign_event_to_team(event_id: int, team_id: int, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
-    if current_user["is_admin"] != True and current_user['role'] != models.UserRoleEnum.COACH.value:
+    if current_user["is_admin"] != True and current_user['user_type'] != models.UserTypeEnum.COACH.value:
         raise HTTPException(status_code=403, detail="Només els entrenadors o administradors poden assignar esdeveniments a equips.")
     
     check_query = text("SELECT * FROM event_teams WHERE event_id = :e_id AND team_id = :t_id")
@@ -466,24 +564,22 @@ def get_event_summary(event_id: int, db: Session = Depends(get_db)):
 # --- 5. AUTHENTICATION ---
 @app.post("/auth/login")
 def login(login_data: schemas.LoginRequest, db: Session = Depends(get_db)):
-    db_player = db.query(models.PlayerModel).filter(models.PlayerModel.username == login_data.username).first()
-    if not db_player:
-        raise HTTPException(status_code=401, detail="Nom d'usuari")
-                                                                                    #! Change message to make them ambiguous
-    if not auth.verify_password(login_data.password, db_player.hashed_password):
-        raise HTTPException(status_code=401, detail="contrasenya incorrectes")
+    db_user = db.query(models.UserModel).filter(models.UserModel.username == login_data.username).first()
+    if not db_user:
+        raise HTTPException(status_code=401, detail="Nom d'usuari o contrasenya incorrectes")
+    if not auth.verify_password(login_data.password, db_user.hashed_password):
+        raise HTTPException(status_code=401, detail=" Nom d'usuari o contrasenya incorrectes")
     
-    access_token = auth.create_access_token(data={"id": db_player.id, "user": db_player.username, "role": db_player.role.value, "is_admin": db_player.is_admin})
+    access_token = auth.create_access_token(data={"id": db_user.id, "user": db_user.username, "user_type": db_user.user_type.value, "is_admin": db_user.is_admin})
 
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "role": db_player.role.value,
-        "is_admin": db_player.is_admin,
-        "player_id": db_player.id,
-        "player_username": db_player.username,  
-        "prefered_name": db_player.prefered_name,
-        "team_ids": [team.id for team in db_player.teams]
+        "user_type": db_user.user_type.value,
+        "is_admin": db_user.is_admin,
+        "user_id": db_user.id,
+        "user_username": db_user.username,  
+        "prefered_name": db_user.prefered_name
     }
 
 # --- 6. TEAMS ---
@@ -512,7 +608,7 @@ def list_teams(db: Session = Depends(get_db)):
 def get_enums():
     return {
         "positions": [{"label": position.value, "value": position.value} for position in models.PositionEnum],
-        "roles": [{"label": role.value, "value": role.value} for role in models.UserRoleEnum],
+        "user_types": [{"label": user_type.value, "value": user_type.value} for user_type in models.UserTypeEnum],
         "sexes": [{"label": sex.value, "value": sex.value} for sex in models.SexEnum],
         "pronouns": [{"label": pronoun.value, "value": pronoun.value} for pronoun in models.PronounsEnum]
     }
