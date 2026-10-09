@@ -81,7 +81,7 @@ function UserView({ logo, onOpenMenu}) {
                     ) : (
                         <>
                         <div><strong>Nom Preferit:</strong> {user.prefered_name}</div>
-                        <button onClick={() => startEditing("preferedname", user.prefered_name)} style={theme.teamSummary_edit_detail_button}>✏️</button>
+                        <button onClick={() => startEditing("prefered_name", user.prefered_name)} style={theme.teamSummary_edit_detail_button}>✏️</button>
                     </>
                     )}
                 </div>
