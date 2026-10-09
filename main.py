@@ -577,6 +577,15 @@ def login(login_data: schemas.LoginRequest, db: Session = Depends(get_db)):
     
     access_token = auth.create_access_token(data={"id": db_user.id, "user": db_user.username, "user_type": db_user.user_type.value, "is_admin": db_user.is_admin})
 
+    if hasattr(db_user, 'teams') and db_user.teams:
+        team_ids = [t.id for t in db_user.teams]
+    elif db_user.is_admin or db_user.user_type == models.UserTypeEnum.COACH.value:
+        # Si és admin o coach i no té equips específics, els té tots
+        all_teams = db.query(models.TeamModel).all()
+        team_ids = [t.id for t in all_teams]
+    else:
+        team_ids = []
+
     return {
         "access_token": access_token,
         "token_type": "bearer",
@@ -584,7 +593,8 @@ def login(login_data: schemas.LoginRequest, db: Session = Depends(get_db)):
         "is_admin": db_user.is_admin,
         "user_id": db_user.id,
         "user_username": db_user.username,  
-        "prefered_name": db_user.prefered_name
+        "prefered_name": db_user.prefered_name,
+        "team_ids": team_ids
     }
 
 # --- 6. TEAMS ---
