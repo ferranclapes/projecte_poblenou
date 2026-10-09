@@ -19,7 +19,7 @@ function EventSummary({ eventId, onBack }) {
       });
   }, [eventId]);
 
-  if (loading) return <div style={{ padding: '20px', textAlign: 'center' }}>Carregant resum de la pinya...</div>;
+  if (loading) return <div style={{ padding: '20px', textAlign: 'center' }}>Carregant resum de la convocatòria...</div>;
   if (!summary) return <div style={{ padding: '20px', textAlign: 'center' }}>No s'ha pogut carregar el resum.</div>;
 
   return (

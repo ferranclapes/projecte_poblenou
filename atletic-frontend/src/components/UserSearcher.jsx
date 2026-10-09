@@ -7,7 +7,7 @@ function UserSearcher({logo, onOpenMenu}) {
     const [users, setUsers] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(false);
-    const [resetPasswordPermision] = useState((localStorage.getItem('is_admin') === 'true' ? true : false));
+    const [resetPasswordPermision] = useState(((localStorage.getItem('is_admin') === 'true') || (localStorage.getItem('user_type') === 'Entrenador')) ? true : false);
 
     useEffect(() => {
         const token = localStorage.getItem('token');

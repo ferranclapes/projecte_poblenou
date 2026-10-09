@@ -228,7 +228,17 @@ function App() {
     return (<EventSummary eventId={currentEventId} onBack={() => setCurrentEventId(null)}/>);
   }
 
-  const filteredEvents = events.filter(event => event.date_time.split('T')[0] === selectedDayStr);
+  
+  const userTeamIds = JSON.parse(localStorage.getItem("team_ids") || '[]');
+  const filteredEvents = events.filter(event => {
+    const matchesday = event.date_time.split('T')[0] === selectedDayStr;
+
+    const eventTeamIds = event.team_ids || [];
+    const matchesTeam = eventTeamIds.some(eventId => 
+      userTeamIds.some(userId => String(userId) === String(eventId))
+    );
+    return matchesday && matchesTeam;
+  });
 
   //* MAIN RENDER
   return (
@@ -271,11 +281,11 @@ function App() {
 
       
       {/* 3. COMPONENT FORMULARI (Invocat de forma neta i modular) 📦 */}
-      {localStorage.getItem('is_admin') === 'true' && (
+      {(localStorage.getItem('is_admin') === 'true' || localStorage.getItem('user_type') === 'Entrenador') && (
       <button onClick={() => setIsFormVisible(true)} style={{...theme.btnPrimary, marginBottom: '10px'}}>➕ Nova Convocatòria</button>
       )}
       
-      {localStorage.getItem('is_admin') === 'true' && (isFormVisible || editingEvent) && (
+      {(localStorage.getItem('is_admin') === 'true' || localStorage.getItem('user_type') === 'Entrenador') && (isFormVisible || editingEvent) && (
         <EventForm
           key={editingEvent ? editingEvent.id : 'new'}
           onEventCreated={() => {fetchEvents(); setIsFormVisible(false); setEditingEvent(null);}}

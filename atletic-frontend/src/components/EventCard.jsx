@@ -56,7 +56,7 @@ function EventCard({event, onClickEvent, onEdit, onRefreshEvents}) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             {/*//TODO: Canviar color segons tipus d'esdeveniment utilizant un loopUp object per a millor escalabilitat */}
             <span style={{...theme.event_type_badge, background: event.event_type === 'Partit' ? '#ff3131' : 'lightgreen'}}>{event.event_type}</span>
-            {localStorage.getItem('is_admin') === 'true' && (
+            {(localStorage.getItem('is_admin') === 'true' || localStorage.getItem('user_type') === 'Entrenador') && (
             <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
               <button onClick={onEdit} style={theme.edit_event_button} title="Editar">✏️</button>
             </div>

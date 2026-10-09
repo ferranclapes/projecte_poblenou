@@ -27,7 +27,7 @@ function SideMenu({ isOpen, onClose, onLogout, onViewMainPage, onViewTeamSummary
             <button style= {theme.sideMenu_button} onClick={onViewUserSearcher}>
             Cercar usuaris
             </button>
-            {localStorage.getItem('is_admin') === 'true' && (
+            {(localStorage.getItem('is_admin') === 'true' || localStorage.getItem('user_type') === 'Entrenador') && (
               <button style= {theme.sideMenu_button} onClick={onCreateNewMember}>
               Crear nou  membre
               </button>

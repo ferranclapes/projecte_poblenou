@@ -70,8 +70,19 @@ function Calendar ({events, selectedDayStr, setSelectedDayStr}) {
 
   //* Check if a given date has any events
   const dayHasEvents = (dateStr) => {
-    return events.some(event => event.date_time.split('T')[0] === dateStr);
-  };
+      const userTeamIds = JSON.parse(localStorage.getItem("team_ids") || '[]');
+
+      return events.some(event => {
+        const matchesDay = event.date_time.split('T')[0] === dateStr;
+        
+        const eventTeamIds = event.team_ids || [];
+        const matchesTeam = eventTeamIds.some(eventId => 
+          userTeamIds.some(userId => String(userId) === String(eventId))
+        );
+
+        return matchesDay && matchesTeam;
+      });
+    };
 
   const backToToday = () =>{
     setCurrentDate(today);
