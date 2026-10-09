@@ -140,13 +140,17 @@ def update_player_profile(user_id: int, user_data: dict, db: Session = Depends(g
     db_user = db.query(models.UserModel).filter(models.UserModel.id == user_id).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="Player not found")
+
+    has_prefered_name = False
+    if "name" != "prefered_name" or "prefered_name" in user_data:
+        has_prefered_name = True
     
     for key, value in user_data.items():
         if hasattr(db_user, key):
             setattr(db_user, key, value)
 
-    if "name" in user_data or "surname1" in user_data or "surname2" in user_data:
-        db_user.username = f"{db_user.name.lower()}_{db_user.surname1.lower()}_{db_user.surname2.lower()}"
+    if "name" in user_data or "surname1" in user_data or "surname2" in user_data or "prefered_name" in user_data:
+        db_user.username = f"{db_user.prefered_name.lower() if has_prefered_name else db_user.name.lower()}_{db_user.surname1.lower()}_{db_user.surname2.lower()}"
 
     db.commit()
     db.refresh(db_user)
