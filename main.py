@@ -27,7 +27,12 @@ async def add_cors_header(request: Request, call_next):
     # Definim quins orígens permetem (localhost o qualsevol subdomini de Cloudflare Pages)
     is_allowed = False
     if origin:
-        if origin in ["http://localhost:5173", "http://127.0.0.1:5173", "http://127.0.0.1:8787", "https://laxarxa.ferranclapescosta.workers.dev"]:
+        if origin in [
+            "http://localhost:5173", 
+            "http://127.0.0.1:5173", 
+            "http://127.0.0.1:8787", 
+            "https://laxarxa.ferranclapescosta.workers.dev"
+            ]:
             is_allowed = True
 
     # Si és una petició OPTIONS (preflight), responem directament
@@ -141,7 +146,7 @@ def update_player_profile(user_id: int, user_data: dict, db: Session = Depends(g
             setattr(db_user, key, value)
 
     if "name" in user_data or "surname1" in user_data or "surname2" in user_data:
-        db_user.username = f"{db_user.name}_{db_user.surname1}_{db_user.surname2}"
+        db_user.username = f"{db_user.name.lower()}_{db_user.surname1.lower()}_{db_user.surname2.lower()}"
 
     db.commit()
     db.refresh(db_user)
