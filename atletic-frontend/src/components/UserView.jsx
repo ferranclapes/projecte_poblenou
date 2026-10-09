@@ -67,7 +67,7 @@ function UserView({ logo, onOpenMenu}) {
             <div style={theme.userProfile_container}>
                 <h3 style={{margin: '10px 0 5px 0', color: '#ff3131', fontSize: '20px'}}>Informació personal</h3>
                 <div style={{...theme.teamSummary_detail_row, marginBottom: '5px'}}>
-                    {editingCell === 'preferedname' ? (
+                    {editingCell === 'prefered_name' ? (
                         <div style={theme.teamSummary_edit_detail_container}>
                             <div>
                                 <strong>Nom Preferit:</strong>
