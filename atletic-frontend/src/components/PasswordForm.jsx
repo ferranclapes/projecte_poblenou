@@ -30,7 +30,7 @@ function PasswordForm({onCancel}) {
             new_password: newPassword
         }
 
-        axios.post(`${API_URL}/players/${userId}/change-password`, payload, {
+        axios.post(`${API_URL}/users/${userId}/change-password`, payload, {
         headers: {
             'Authorization': `Bearer ${token}`
         }
