@@ -154,7 +154,7 @@ def update_player_profile(user_id: int, user_data: dict, db: Session = Depends(g
 
     db.commit()
     db.refresh(db_user)
-    return {"status": "success", "message": "Perfil actualitzat correctament"}
+    return {"status": "success", "message": "Perfil actualitzat correctament", "username": db_user.username, "prefered_name": db_user.prefered_name}
 
 @app.post("/users/{user_id}/change-password")
 def change_password(user_id: int, password_data: schemas.ChangePasswordRequest, db: Session = Depends(get_db), current_user: dict = Depends(auth.get_current_user)):
