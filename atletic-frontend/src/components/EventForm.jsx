@@ -48,7 +48,7 @@ function EventForm({ onEventCreated, editingEvent, onCancelEdit }) {
     const payload = {
       event_type: eventType,
       name: eventName,
-      date_time: new Date(eventDateTime).toISOString(),
+      date_time: eventDateTime.length === 16 ? `${eventDateTime}:00` : eventDateTime,
       location: eventLocation || null,
       description: eventDescription || null,
       team_ids: selectedTeams,

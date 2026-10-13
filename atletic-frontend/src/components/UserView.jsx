@@ -43,8 +43,8 @@ function UserView({ logo, onOpenMenu}) {
             // Actualitzem l'estat localment per veure el canvi a l'instant
             setUser(prev => ({ ...prev, [editingCell]: editValue }));
             if (editingCell === 'prefered_name' || editingCell === 'name' || editingCell === 'surname1' || editingCell === 'surname2') {
-                localStorage.setItem("username", response.username);
-                localStorage.SetItem("prefered_name", response.prefered_name);
+                localStorage.setItem("username", response.data.username);
+                localStorage.setItem("prefered_name", response.data.prefered_name);
             }
             setEditingCell(null);
             alert("✅ Informació actualitzada correctament!");
